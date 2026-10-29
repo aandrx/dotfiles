@@ -142,9 +142,9 @@
       "upstream_path": "skills/recall/SKILL.md",
       "installed_path": "skills/recall/SKILL.md",
       "sha256_transformed": "0955ad9b0fe89b46fdb5a0635959a18c275aaecd68accf605b5740808a62924f",
-      "sha256_current": "de8350be05e1e8f640f5e731880ea0cd0ef1b1a59d783960e577e52a14ce626a",
+      "sha256_current": "cbe2a2014818153ec299b4a44aa02169f05e4ec524914e926df69cfddbc735e1",
       "patched": true,
-      "patch_reason": "pi-harness"
+      "patch_reason": "pi-harness; public path placeholder"
     },
     {
       "source": "pstack",

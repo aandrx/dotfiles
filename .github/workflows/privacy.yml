@@ -23,6 +23,9 @@ jobs:
       - name: Tracked worktree privacy check
         run: python3 scripts/privacy-check.py
 
+      - name: rue-stack package check
+        run: node .pi/agent/packages/rue-stack/eval/check.mjs
+
       - name: Install checksum-verified Gitleaks
         env:
           GITLEAKS_VERSION: "8.30.1"
