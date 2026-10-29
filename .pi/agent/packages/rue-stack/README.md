@@ -10,21 +10,20 @@ The goal is not more output. It is code you can defend: reproduced bugs, regress
 
 ## install
 
-rue-stack is a Pi package. It lives in this dotfiles repo and is loaded by path.
+This package is a reference stack, not a cloneable machine. Take what fits your setup.
 
-```bash
-git clone git@github.com:aandrx/dotfiles.git ~/dotfiles
-~/dotfiles/scripts/install.sh
-```
+**Use the skills directly.** Copy the skill directory you want into your agent's skills folder, for example `~/.pi/agent/skills/<name>/`, and read its `SKILL.md`. Skills are portable; the mode extension and the roster are not.
 
-Then confirm Pi sees it:
+**Use the whole package.** Copy `packages/rue-stack` into your agent directory, then reference it from `~/.pi/agent/settings.json` under `packages` as `./packages/rue-stack`. Confirm it loads:
 
 ```bash
 pi list          # rue-stack should appear
 /crew check      # roster, models, thinking levels, tools
 ```
 
-The package is referenced from `~/.pi/agent/settings.json` as `./packages/rue-stack`. Skills, the mode extension, the policy extension, and the task-state tool all load from there. The private companion repo holds the machine-specific and non-public pieces that must not ship here.
+**Read it as a worked example.** The modes, the policy injection, the enforced roster and the vendoring manifest are all documented here so you can build your own version rather than adopt this one. Model names, thinking levels and agent roles are specific to this setup and will not be right for yours.
+
+The private companion repo holds machine-specific and non-public pieces; it is not published and not required to use anything here.
 
 ## get started
 
