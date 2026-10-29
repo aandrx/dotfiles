@@ -181,3 +181,6 @@ alias bluetooth-off='sudo systemctl stop bluetooth; sudo systemctl disable bluet
 
 # ─── DeepSeek Harness ───
 # dsh is installed globally at ~/.npm-global/bin/dsh; no alias needed.
+
+# Machine-local overrides (never tracked).
+[ -f "$HOME/.zshrc.local" ] && . "$HOME/.zshrc.local"
