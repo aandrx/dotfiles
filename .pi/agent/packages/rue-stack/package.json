@@ -1,0 +1,24 @@
+{
+  "name": "rue-stack-shadow",
+  "version": "0.1.0",
+  "description": "Shadow V1 lazy Pi development stack",
+  "keywords": ["pi-package"],
+  "type": "module",
+  "scripts": {
+    "test": "node eval/check.mjs",
+    "e2e": "node eval/e2e/run.mjs"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "typebox": "*"
+  },
+  "pi": {
+    "extensions": [
+      "./extensions/global-policy.ts",
+      "./extensions/mode.ts",
+      "./extensions/task-state.ts"
+    ],
+    "skills": ["./skills"],
+    "prompts": []
+  }
+}

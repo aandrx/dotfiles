@@ -1,0 +1,27 @@
+/* Removed from ~/.config/waybar-niri/style.css on 2026-10-24. */
+
+/* Dead module ids inside the shared container rule.
+ * The live rule now reads:
+ *   #workspaces, #battery, #pulseaudio, #clock { ... }
+ * This is the original line for reference. */
+#workspaces, #group-status, #mpris, #battery, #pulseaudio, #clock {
+  margin: 0;                    /* no vertical margins */
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* right group – flat */
+#group-status { background: transparent; color: @on_surface; padding: 0 6px; }
+
+/* clock a touch heavier — fully overridden by the later #clock block */
+#clock { font-size: 13px; }
+
+/* mpris flat */
+#mpris { font-size: 12px; padding: 0 8px; }
+
+/* Legacy spacing rule. Overridden by the later
+ * "#memory, #pulseaudio, ... { margin: 0 3px; }" rule of equal specificity,
+ * so removing it changes nothing visually. */
+#custom-cpufreq, #cpu, #custom-power, #memory, #pulseaudio, #battery {
+  margin-right: 8px;   /* add spacing between each item */
+}

@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+# Validate and publish a completed research session.
+
+set -euo pipefail
+
+ROOT="${RESEARCH_ROOT:-$HOME/.local/share/opencode/research}"
+SESSION_NAME="${1:-}"
+MAX_AGE_DAYS="${RESEARCH_MAX_AGE_DAYS:-60}"
+
+if [ -z "$SESSION_NAME" ]; then
+  echo "Usage: research-commit <session-name>"
+  exit 1
+fi
+
+SESSION_DIR="$ROOT/sessions/$SESSION_NAME"
+REPORT="$SESSION_DIR/report.md"
+HANDOFF="$SESSION_DIR/handoff.md"
+REGISTRY="$SESSION_DIR/sources/registry.md"
+
+for required in "$REPORT" "$HANDOFF" "$REGISTRY"; do
+  if [ ! -s "$required" ]; then
+    echo "Required artifact missing or empty: $required" >&2
+    exit 1
+  fi
+done
+
+grep -q '^### Sources$' "$REPORT" || {
+  echo "Report is missing ### Sources: $REPORT" >&2
+  exit 1
+}
+
+mkdir -p "$ROOT/brain"
+python3 - "$ROOT" "$SESSION_NAME" "$MAX_AGE_DAYS" "$REPORT" "$HANDOFF" <<'PY'
+import json
+import re
+import sys
+from datetime import date, timedelta
+from pathlib import Path
+
+root, session, max_age, report, handoff = sys.argv[1:]
+root = Path(root)
+today = date.today()
+cutoff = today - timedelta(days=int(max_age))
+
+stale = []
+
+for path in sorted((root / "brain").rglob("*.md")):
+    if path.name == "index.md":
+        continue
+    text = path.read_text(errors="replace")
+    matches = re.findall(r"(?:last_verified|Last verified):\s*(\d{4}-\d{2}-\d{2})", text)
+    if not matches:
+        continue
+    verified = max(date.fromisoformat(value) for value in matches)
+    if verified < cutoff:
+        stale.append({"path": str(path), "last_verified": verified.isoformat()})
+
+latest = root / "latest"
+tmp = root / ".latest.tmp"
+tmp.unlink(missing_ok=True)
+tmp.symlink_to(Path("sessions") / session)
+tmp.replace(latest)
+
+metadata = {
+    "session": session,
+    "published": today.isoformat(),
+    "report": str(Path(report)),
+    "handoff": str(Path(handoff)),
+    "stale_findings": stale,
+    "max_age_days": int(max_age),
+}
+(root / "sessions" / session / "publish.json").write_text(
+    json.dumps(metadata, indent=2) + "\n"
+)
+print(f"Published {session}; stale findings: {len(stale)}")
+for item in stale:
+    print(f"STALE {item['last_verified']} {item['path']}")
+PY

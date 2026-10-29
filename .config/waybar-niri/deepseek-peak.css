@@ -1,0 +1,21 @@
+/* ==========================================================================
+   DeepSeek API peak-hours indicator  (module: custom/deepseek-peak)
+   --------------------------------------------------------------------------
+   Self-contained add-on. To uninstall completely:
+     1. delete this file
+     2. delete ~/.config/waybar-niri/deepseek-peak.sh
+     3. remove the @import "deepseek-peak.css" line in style.css
+     4. remove "custom/deepseek-peak" from modules-right in config.jsonc
+     5. remove the "custom/deepseek-peak" block in config.jsonc
+   ========================================================================== */
+
+/* Peak = full price: warm alert tone. Off-peak = half price: theme primary. */
+@define-color ds_peak #f2b8a2;
+
+#custom-deepseek-peak {
+  padding: 0 1px;
+  margin: 0 3px;
+}
+
+#custom-deepseek-peak.peak    { color: @ds_peak; }
+#custom-deepseek-peak.offpeak { color: @primary; }

@@ -1,0 +1,12 @@
+# Enable required code-owner review in GitHub branch protection separately.
+# This file requests review; it does not enforce branch settings on its own.
+/AGENTS.md @aandrx
+/PRIVACY.md @aandrx
+/SECURITY.md @aandrx
+/NOTICE.md @aandrx
+/.gitignore @aandrx
+/.gitleaks.toml @aandrx
+/.gitleaksignore @aandrx
+/.githooks/ @aandrx
+/.github/ @aandrx
+/scripts/ @aandrx

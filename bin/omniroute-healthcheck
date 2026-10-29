@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# omniroute-healthcheck - curl the gateway, restart via systemd if unhealthy.
+# Exits 0 when healthy. On failure: restarts the service, exits 1.
+
+URL="http://localhost:20128/v1/models"
+
+if curl -sf -m 10 "$URL" > /dev/null 2>&1; then
+  exit 0
+fi
+
+# unhealthy - try once more after 3s (transient blip guard)
+sleep 3
+if curl -sf -m 10 "$URL" > /dev/null 2>&1; then
+  exit 0
+fi
+
+logger -t omniroute-healthcheck "gateway /v1/models unreachable, restarting service"
+systemctl --user restart omniroute.service
+exit 1

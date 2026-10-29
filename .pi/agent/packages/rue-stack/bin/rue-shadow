@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Run Pi with the shadow Rue Stack loaded on top of the current live setup.
+# Nothing is installed and no settings file is modified.
+set -euo pipefail
+
+shadow_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+pi_bin="${PI_BIN:-pi}"
+
+exec "$pi_bin" \
+  --extension "$shadow_dir/extensions/global-policy.ts" \
+  --extension "$shadow_dir/extensions/task-state.ts" \
+  --extension "$shadow_dir/extensions/mode.ts" \
+  --skill "$shadow_dir/skills" \
+  "$@"

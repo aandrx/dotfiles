@@ -1,0 +1,56 @@
+// Zed settings
+//
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+//
+// To see all of Zed's default settings without changing your
+// custom settings, run zed: open default settings from the
+// command palette (cmd-shift-p / ctrl-shift-p)
+{
+  "edit_predictions": {
+    "provider": "copilot"
+  },
+  "ssh_connections": [],
+  "terminal": {
+    "working_directory": "current_project_directory",
+    "shell": {
+      "program": "zsh",
+    },
+  },
+  "agent": {
+    "always_allow_tool_actions": true,
+    "default_profile": "ask",
+    "default_model": {
+      "enable_thinking": true,
+      "provider": "copilot_chat",
+      "model": "claude-sonnet-4.6",
+    },
+    "model_parameters": [],
+  },
+  "telemetry": {
+    "diagnostics": false,
+    "metrics": false,
+  },
+  "vim_mode": false,
+  "vim.leader": " ",
+  "icon_theme": {
+    "mode": "system",
+    "light": "Zed (Default)",
+    "dark": "Zed (Default)",
+  },
+  "base_keymap": "VSCode",
+  "ui_font_size": 16,
+  "buffer_font_size": 15,
+  "theme": {
+    "mode": "system",
+    "light": "Catppuccin Mocha",
+    "dark": "One Dark",
+  },
+  "buffer_font_features": {
+    "calt": false,
+  },
+  "soft_wrap": "editor_width",
+  "show_edit_predictions": false,
+  "show_completions_on_input": false,
+  "extend_comment_on_newline": false,
+}

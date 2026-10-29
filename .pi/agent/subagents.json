@@ -1,0 +1,8 @@
+{
+  "rememberAgents": false,
+  "outputTranscript": false,
+  "disableDefaultAgents": true,
+  "fallbackSubagent": "none",
+  "strictAgentFiles": true,
+  "workflowsEnabled": true
+}

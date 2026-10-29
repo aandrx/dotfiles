@@ -1,0 +1,30 @@
+{
+  "theme": "dark",
+  "defaultModel": "deepseek-v4.1-flash",
+  "enabledModels": [],
+  "packages": [
+    {
+      "source": "npm:pi-ollama-cloud",
+      "extensions": [
+        "+index.ts"
+      ]
+    },
+    "./packages/pi-subagents",
+    "npm:@maxpaulus/pi-cline",
+    "./packages/pi-split-view",
+    "./packages/rue-stack",
+    "npm:pi-checkpoints",
+    "./packages/pi-context-bar",
+    "npm:pi-polish",
+    "npm:pi-next-prompt"
+  ],
+  "defaultProvider": "opencode-go",
+  "hideThinkingBlock": true,
+  "defaultThinkingLevel": "low",
+  "modelThinkingLevels": {
+    "nvidia/z-ai/glm-5.3-flash": "high"
+  },
+  "quietStartup": false,
+  "enableSkillCommands": true,
+  "lastChangelogVersion": "1.4.0"
+}

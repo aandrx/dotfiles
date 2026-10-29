@@ -1,0 +1,141 @@
+# Plain dotfiles and a customized Pi setup
+
+Ordinary folders and real filenames, with no chezmoi, templating engine, or
+hidden capture daemon. Read [AGENTS.md](AGENTS.md) before making changes and
+[PRIVACY.md](PRIVACY.md) before adding anything to Git.
+
+**Release status:** this is a locally prepared clean snapshot, not a clone of
+the private source history. It has not been published. Publication is a separate
+approval step; see `PRIVACY.md`. Original work is MIT-licensed under
+[LICENSE](LICENSE); third-party licenses remain component-specific. See
+[NOTICE.md](NOTICE.md).
+
+## Layout
+
+| Repository path | Meaning |
+| --- | --- |
+| `.config/` | Portable application settings; Linux desktop files are OS-gated. |
+| `.pi/agent/` | Pi instructions, roles, extensions, skills, workflows and packages. |
+| `.pi/bin/`, `bin/`, root shell files | Home-directory configuration and utilities. |
+| `system/` | Separately deployed Linux system configuration, mirroring `/`. |
+| `*.example` | Non-deployed examples that require local review/customization. |
+| `scripts/`, `.github/`, `.githooks/`, root docs | Repository-only maintenance and checks. |
+
+The home layout mirrors `~`; it does **not** mean that everything in `~` belongs
+in Git. Installers consume the tracked manifest, not every file physically in
+the checkout. Ignored local notes and dependencies are not distributable input.
+
+## Pi customization
+
+The repository preserves the local setup, rather than silently reinstalling
+upstream versions of patched packages:
+
+- `AGENTS.md`, `APPEND_SYSTEM.md`, `agents/`, and `subagents.json`: policy and
+  the `researcher`, `Plan`, `implementer`, `reviewer` roster.
+- `extensions/`, `skills/`, `workflows/`: maintained sources and tests.
+- `packages/rue-stack/`: skills, modes, task-state and global-policy extensions.
+- `packages/pi-subagents/`: maintained subagent/workflow runtime.
+- `packages/pi-context-bar/`: customized footer with mode/task progress,
+  session name, cache metrics, throughput and cost layout.
+- `packages/pi-split-view/`: local widget behavior.
+
+Keep the `./packages/...` references in `settings.json`. Replacing those with
+npm sources loses local changes. Package-local `LOCAL-CHANGES.md`, licenses,
+and `rue-stack/VENDOR.json` document provenance. Other npm sources in settings
+are installed separately; their upstream updates can change behavior.
+
+Private provider configuration, model credentials, sessions, personal notes,
+and the installed Pi runtime are deliberately not included. Clone recipients
+must install Pi and authenticate themselves. The separately licensed local
+`frontend-design` skill is also excluded pending redistribution permission.
+
+## Install on another machine
+
+Review the source first. Maintenance scripts require Git, Python 3.10+, Bash
+4+, and GNU coreutils (`realpath`, `stat`, `sort`). They are tested on Linux;
+macOS needs compatible tools on PATH, and system configuration is Linux-only.
+No public remote is configured yet. After publication, replace
+`PUBLIC_REPOSITORY_URL` below with the approved public clone URL; do not clone
+or publish the maintainer's private-history repository instead.
+
+```sh
+git clone PUBLIC_REPOSITORY_URL ~/dotfiles
+cd ~/dotfiles
+./scripts/install.sh --dry-run --no-deps
+./scripts/install.sh --no-deps
+```
+
+Existing differing destinations are backed up privately before copy-mode
+replacement. `--link` links tracked files individually; `--force` permits
+backing up link-mode conflicts. Dry-run makes no changes. `*.example` files
+are never installed. Check the script's help for current options.
+
+Dependency installation executes package scripts and uses the network. Omit
+`--no-deps` only after reviewing the local package manifests, or install runtime
+dependencies manually in the applicable deployed package directory. Do not run
+npm across every folder indiscriminately.
+
+Install Pi using its official installer, then start it to resolve the npm
+packages configured in settings. The checked-in model/provider preferences
+may not be available on your account; select your own after authentication.
+On Windows, install Pi's Windows shims and use Git Bash for these Bash scripts;
+application settings may need native platform locations (for example Zed uses
+`%APPDATA%\Zed`, not `~/.config/zed`). This is not a universal Windows installer.
+
+### Machine-local settings
+
+- Put shell environment overrides in `~/.bashrc.local`.
+- Put Git name/email and authentication helpers in `~/.gitconfig.local`.
+  The public `.gitconfig` includes that file and does not enable plaintext
+  credential storage.
+- Configure search/extraction services through `SEARXNG_URL` and
+  `SELFHOSTED_EXTRACT_URL`. Their defaults are localhost ports 8888 and 8899;
+  those services must be installed separately. There is no maintainer tailnet
+  fallback. Put host-specific overrides in your private environment.
+- Customize application examples locally; do not capture real host aliases,
+  absolute home paths, disk IDs, network identities, or secrets back into Git.
+- Wallpaper state is generated by the picker/restore scripts, not tracked.
+
+The public tree intentionally differs from the maintainer's live files. A
+privacy refusal is not a reason to force-add the live copy.
+
+### Optional Linux system configuration
+
+`system/` contains hardware/power/udev examples and an Arch-specific package
+hook. It is **not** required for Pi and is not safe to apply blindly on another
+machine. Review every file against your hardware and distribution.
+
+```sh
+./scripts/install-system.sh --dry-run
+# Only after manual review, explicit authorization, and a recovery plan:
+# sudo ./scripts/install-system.sh --apply
+```
+
+The system installer requires explicit application, backs up differing existing
+files, and skips `*.example`. Bootloader examples are never automatically
+installed or regenerated. Preserve a working boot configuration locally.
+
+## Updating safely
+
+Edit portable settings in this repository, not private copies. Capture only
+reviewed tracked paths when needed:
+
+```sh
+./scripts/capture.sh --dry-run .config/kitty/kitty.conf
+./scripts/capture.sh .config/kitty/kitty.conf
+python3 -m unittest discover -s scripts/tests -v
+python3 scripts/privacy-check.py
+./scripts/check-pi-extension-imports.sh
+git diff --check
+# Stage each intended file explicitly, then validate the actual index:
+python3 scripts/privacy-check.py --staged
+```
+
+Capture validates candidates before writing, does not add new files, and
+skips examples. Refusals block the operation. Do not paste raw private diffs
+or scanner matches into chat/issues. Report paths, lines, and rule names only.
+
+For Gitleaks, optional local hooks, CI, incident handling, and the history
+release gate, see `PRIVACY.md`. Commits, pushes, live deployment and publication
+remain separate explicit actions. No agent should infer permission to publish
+from a request to synchronize configuration.

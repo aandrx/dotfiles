@@ -1,0 +1,10 @@
+{
+  "name": "mcp-stripe",
+  "version": "1.0.0",
+  "description": "Optional Stripe MCP connection for the Momentum workflow. Requires your own account and OAuth sign-in.",
+  "author": {
+    "name": "Johnathan Mo"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/23jmo/momentum-skills"
+}

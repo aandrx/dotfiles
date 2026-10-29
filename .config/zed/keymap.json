@@ -1,0 +1,49 @@
+// Zed keymap
+//
+// For information on binding keys, see the Zed
+// documentation: https://zed.dev/docs/key-bindings
+//
+// To see the default key bindings run `zed: open default keymap`
+// from the command palette.
+[
+  {
+    "context": "Workspace",
+    "bindings": {
+      // "shift shift": "file_finder::Toggle"
+    },
+  },
+  {
+    "context": "Editor && vim_mode == normal",
+    "bindings": {
+      //
+      // Disable the default space action in normal mode if needed
+      "space": null,
+      "space w": "workspace::Save",
+      "space f g": "vim::Search",
+      "space y": "editor::Copy",
+      "space n": "workspace::ToggleLeftDock",
+      "space /": "editor::ToggleComments",
+      "space l f": "editor::Format",
+      "space f s": "editor::FormatSelections",
+      // Bind "space f f" to toggle the file finder
+      // "space f f": "file_finder::Toggle",
+      // Bind "space s h" to split the pane horizontally
+      // "space s h": "pane::SplitDown",
+      // Bind "space s v" to split the pane vertically
+      // "space s v": "pane::SplitRight",
+      // Bind "space w" to close the current pane item
+      // "space w": "pane::CloseActiveItem",
+    },
+  },
+  {
+    "context": "Editor && vim_mode == insert",
+    "bindings": {
+      // "j k": "vim::NormalBefore"
+    },
+  },
+  {
+    "bindings": {
+      "ctrl-0": null,
+    },
+  },
+]

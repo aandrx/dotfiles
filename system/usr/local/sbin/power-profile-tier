@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# Tiered TLP profile for the low-battery window.
+#
+# TLP only switches profile on AC <-> battery transitions. This adds the third
+# tier you want: at <= 20% on battery it applies TLP's power-saver (SAV)
+# profile, and at >= 25% it returns to balanced (BAT). The 5% gap is hysteresis
+# so a capacity reading sitting on the boundary cannot flap between profiles.
+#
+# Verified against TLP 1.10.2 internals:
+#   - `tlp power-saver` sets the SAV profile and clears manual mode, so
+#     automatic switching stays enabled.
+#   - `tlp auto` (the udev entry point) keeps the last applied profile when the
+#     power source has not changed, so periodic capacity events do not undo it.
+#   - A real AC/BAT transition still applies the AC or BAT profile normally.
+#
+# AC is left entirely to TLP.
+
+set -u
+
+BAT=/sys/class/power_supply/BAT0
+AC=/sys/class/power_supply/AC
+STATE=/run/power-profile-tier
+
+ac=$(/usr/bin/cat "$AC/online" 2>/dev/null || echo 1)
+cap=$(/usr/bin/cat "$BAT/capacity" 2>/dev/null || echo 100)
+
+if [ "$ac" = "1" ]; then
+    # On AC, TLP applies the AC profile on the same event. Drop any tier marker.
+    /bin/rm -f "$STATE"
+    exit 0
+fi
+
+tier=$(/usr/bin/cat "$STATE" 2>/dev/null || echo bat)
+
+if [ "$tier" != "sav" ] && [ "$cap" -le 20 ]; then
+    if /usr/bin/tlp power-saver; then
+        echo sav > "$STATE"
+        /usr/bin/logger -t power-profile-tier "battery ${cap}% -> power-saver"
+    fi
+elif [ "$tier" = "sav" ] && [ "$cap" -ge 25 ]; then
+    if /usr/bin/tlp balanced; then
+        echo bat > "$STATE"
+        /usr/bin/logger -t power-profile-tier "battery ${cap}% -> balanced"
+    fi
+fi
+
+exit 0

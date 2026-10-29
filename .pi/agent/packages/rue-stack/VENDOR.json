@@ -1,0 +1,548 @@
+{
+  "upstream": {
+    "pstack": "ddf824aff1e55ba14bd666b30bce3fc69962abe6",
+    "jmo": "6082bf2c472857d6cfda48995ab985b69345aac6",
+    "lottie": "f9a8a04",
+    "dimensional-drawing": "5c457437c8c83524308aad3b7443e81adcc13153"
+  },
+  "files": [
+    {
+      "source": "pstack",
+      "upstream_path": "skills/how/SKILL.md",
+      "installed_path": "skills/how/SKILL.md",
+      "sha256_transformed": "b8eab5c8b417a972d3ddf13630fe175be2436e329fe8ef4cbaffa58ee60f93b2",
+      "sha256_current": "f95e1f8d6b15330dc5e2c4bad2cb0aaed60f15c18c4bfedbe808893a3b888dc4",
+      "patched": true,
+      "patch_reason": "pi-harness"
+    },
+    {
+      "source": "pstack",
+      "upstream_path": "skills/how/references/explainer-prompt.md",
+      "installed_path": "skills/how/references/explainer-prompt.md",
+      "sha256_transformed": "ddb89cebefc24e2b54517a331aedfe045b6971e101f45c71b8cef4cccff45bff",
+      "sha256_current": "ddb89cebefc24e2b54517a331aedfe045b6971e101f45c71b8cef4cccff45bff",
+      "patched": false
+    },
+    {
+      "source": "pstack",
+      "upstream_path": "skills/how/references/explorer-prompt.md",
+      "installed_path": "skills/how/references/explorer-prompt.md",
+      "sha256_transformed": "6300128385ee940fd42ecb84b0e623435440a2dc283eae54ee4a52ba56947ba1",
+      "sha256_current": "6300128385ee940fd42ecb84b0e623435440a2dc283eae54ee4a52ba56947ba1",
+      "patched": false
+    },
+    {
+      "source": "pstack",
+      "upstream_path": "skills/blast-radius/SKILL.md",
+      "installed_path": "skills/blast-radius/SKILL.md",
+      "sha256_transformed": "2e10745b97f5862323dcda3b29ca60d56b5c3c98e37020085d26b48efbe0a436",
+      "sha256_current": "2e10745b97f5862323dcda3b29ca60d56b5c3c98e37020085d26b48efbe0a436",
+      "patched": false
+    },
+    {
+      "source": "pstack",
+      "upstream_path": "skills/sharpen/SKILL.md",
+      "installed_path": "skills/sharpen/SKILL.md",
+      "sha256_transformed": "d895695fcc29b832bf118b842c1d7cf356a69622d63c9d49b40a0c97d8496c80",
+      "sha256_current": "d895695fcc29b832bf118b842c1d7cf356a69622d63c9d49b40a0c97d8496c80",
+      "patched": false
+    },
+    {
+      "source": "pstack",
+      "upstream_path": "skills/create-verification-skill/SKILL.md",
+      "installed_path": "skills/create-verification-skill/SKILL.md",
+      "sha256_transformed": "03678000c7cffd5617324203c2b924b283d2473aea81ade5f6dc9915944dc1c0",
+      "sha256_current": "03678000c7cffd5617324203c2b924b283d2473aea81ade5f6dc9915944dc1c0",
+      "patched": false
+    },
+    {
+      "source": "pstack",
+      "upstream_path": "skills/create-verification-skill/references/feature-map-example/README.md",
+      "installed_path": "skills/create-verification-skill/references/feature-map-example/README.md",
+      "sha256_transformed": "cb7bd782cf89968a4ba3d58a5151db837430db92d19a6f52a906973b77b516ba",
+      "sha256_current": "cb7bd782cf89968a4ba3d58a5151db837430db92d19a6f52a906973b77b516ba",
+      "patched": false
+    },
+    {
+      "source": "pstack",
+      "upstream_path": "skills/create-verification-skill/references/feature-map-example/create-note.md",
+      "installed_path": "skills/create-verification-skill/references/feature-map-example/create-note.md",
+      "sha256_transformed": "644a44c74f35d38c2feb7cd05a0121fdebbb623e8dc376c185b565a581d1ccf7",
+      "sha256_current": "644a44c74f35d38c2feb7cd05a0121fdebbb623e8dc376c185b565a581d1ccf7",
+      "patched": false
+    },
+    {
+      "source": "pstack",
+      "upstream_path": "skills/create-verification-skill/references/feature-map-example/search.md",
+      "installed_path": "skills/create-verification-skill/references/feature-map-example/search.md",
+      "sha256_transformed": "6e87b9e7f2791a7776ba1bb83f371cd285c306c67f19d245cc4dd6ca3015c823",
+      "sha256_current": "6e87b9e7f2791a7776ba1bb83f371cd285c306c67f19d245cc4dd6ca3015c823",
+      "patched": false
+    },
+    {
+      "source": "pstack",
+      "upstream_path": "skills/maintain-verification-skill/SKILL.md",
+      "installed_path": "skills/maintain-verification-skill/SKILL.md",
+      "sha256_transformed": "94a4fc97246227a9070d26a5c4a0c4c28fea97229e4a1e29baa948316a28d684",
+      "sha256_current": "94a4fc97246227a9070d26a5c4a0c4c28fea97229e4a1e29baa948316a28d684",
+      "patched": false
+    },
+    {
+      "source": "pstack",
+      "upstream_path": "skills/correct/SKILL.md",
+      "installed_path": "skills/correct/SKILL.md",
+      "sha256_transformed": "e347045d00c967a0b831ef883cc6ac79d21329aa10b5968637df95de7febf0ba",
+      "sha256_current": "e347045d00c967a0b831ef883cc6ac79d21329aa10b5968637df95de7febf0ba",
+      "patched": false
+    },
+    {
+      "source": "pstack",
+      "upstream_path": "skills/benchmark-checklist/SKILL.md",
+      "installed_path": "skills/benchmark-checklist/SKILL.md",
+      "sha256_transformed": "ba109e96c8f6c1c391baccf19e5d11e14370df7b3f2605e1572cd565a6c0fca0",
+      "sha256_current": "ba109e96c8f6c1c391baccf19e5d11e14370df7b3f2605e1572cd565a6c0fca0",
+      "patched": false
+    },
+    {
+      "source": "pstack",
+      "upstream_path": "skills/no-comments/SKILL.md",
+      "installed_path": "skills/no-comments/SKILL.md",
+      "sha256_transformed": "6fe8cdf9e0d67f3a161606701e81aed7be83ab4183bed10176b463d4feb898ba",
+      "sha256_current": "7746c82b76042c4b7f7bb0fb456e0ce708ad8251b4888ba76386c21eed5b554e",
+      "patched": true,
+      "patch_reason": "pi-harness"
+    },
+    {
+      "source": "pstack",
+      "upstream_path": "skills/show-me-your-work/SKILL.md",
+      "installed_path": "skills/show-me-your-work/SKILL.md",
+      "sha256_transformed": "7d2109cc9fe299061019f857fc2ba7a105b03a2471787c1784676e47ae81f02f",
+      "sha256_current": "46d2a935a279e36836ac4a894fab94a7b045fc6a824ff4f3aa984069ff63510f",
+      "patched": true,
+      "patch_reason": "pi-harness"
+    },
+    {
+      "source": "pstack",
+      "upstream_path": "skills/show-me-your-work/references/decision-log-template.tsv",
+      "installed_path": "skills/show-me-your-work/references/decision-log-template.tsv",
+      "sha256_transformed": "6779378006a2f5225e8c06deb84f1d913fb532041ebbb6e50d94600bfe3f4b76",
+      "sha256_current": "6779378006a2f5225e8c06deb84f1d913fb532041ebbb6e50d94600bfe3f4b76",
+      "patched": false
+    },
+    {
+      "source": "pstack",
+      "upstream_path": "skills/show-me-your-work/scripts/log.sh",
+      "installed_path": "skills/show-me-your-work/scripts/log.sh",
+      "sha256_transformed": "a65a4bc5fb7cdeadbdb7b7ff1ca4682f4d9c42420942b2977cd17b46c4ac338e",
+      "sha256_current": "a65a4bc5fb7cdeadbdb7b7ff1ca4682f4d9c42420942b2977cd17b46c4ac338e",
+      "patched": false
+    },
+    {
+      "source": "pstack",
+      "upstream_path": "skills/recall/SKILL.md",
+      "installed_path": "skills/recall/SKILL.md",
+      "sha256_transformed": "0955ad9b0fe89b46fdb5a0635959a18c275aaecd68accf605b5740808a62924f",
+      "sha256_current": "de8350be05e1e8f640f5e731880ea0cd0ef1b1a59d783960e577e52a14ce626a",
+      "patched": true,
+      "patch_reason": "pi-harness"
+    },
+    {
+      "source": "pstack",
+      "upstream_path": "skills/tdd/SKILL.md",
+      "installed_path": "skills/tdd/SKILL.md",
+      "sha256_transformed": "eeb868e2dfebee528d730a67d7b17498fac4bb85dec2e38bc5c5176aca4d5d2f",
+      "sha256_current": "eeb868e2dfebee528d730a67d7b17498fac4bb85dec2e38bc5c5176aca4d5d2f",
+      "patched": false
+    },
+    {
+      "source": "pstack",
+      "upstream_path": "skills/typescript-best-practices/SKILL.md",
+      "installed_path": "skills/typescript-best-practices/SKILL.md",
+      "sha256_transformed": "ec1dac086d3708e5940d45d250c30a37dd953b4e3cb2ca0692f5851d7a039e27",
+      "sha256_current": "ec1dac086d3708e5940d45d250c30a37dd953b4e3cb2ca0692f5851d7a039e27",
+      "patched": false
+    },
+    {
+      "source": "pstack",
+      "upstream_path": "skills/typescript-best-practices/references/patterns.md",
+      "installed_path": "skills/typescript-best-practices/references/patterns.md",
+      "sha256_transformed": "12e70c9419a8b3f5d6a1ab80e272c1f00a43ac0b3bbf72d68199033570e5de77",
+      "sha256_current": "12e70c9419a8b3f5d6a1ab80e272c1f00a43ac0b3bbf72d68199033570e5de77",
+      "patched": false
+    },
+    {
+      "source": "pstack",
+      "upstream_path": "skills/technical-writing/SKILL.md",
+      "installed_path": "skills/technical-writing/SKILL.md",
+      "sha256_transformed": "61fe9c424a798ebf36ad94941f87be049cb8827bdf86d21474a0dde37b513c43",
+      "sha256_current": "61fe9c424a798ebf36ad94941f87be049cb8827bdf86d21474a0dde37b513c43",
+      "patched": false
+    },
+    {
+      "source": "pstack",
+      "upstream_path": "skills/unslop/SKILL.md",
+      "installed_path": "skills/unslop/SKILL.md",
+      "sha256_transformed": "ccab208e315ce05e2fab8eeee2f7879f1289b5c6844840b2d307adf31c79144f",
+      "sha256_current": "ccab208e315ce05e2fab8eeee2f7879f1289b5c6844840b2d307adf31c79144f",
+      "patched": false
+    },
+    {
+      "source": "pstack",
+      "upstream_path": "skills/teach/SKILL.md",
+      "installed_path": "skills/teach/SKILL.md",
+      "sha256_transformed": "bd286e5a6290673be2cd28aef7af2ec7f1fb138e6bce156ea657368c7e7fc8a4",
+      "sha256_current": "bd286e5a6290673be2cd28aef7af2ec7f1fb138e6bce156ea657368c7e7fc8a4",
+      "patched": false
+    },
+    {
+      "source": "jmo",
+      "upstream_path": "skills/interview/SKILL.md",
+      "installed_path": "skills/interview/SKILL.md",
+      "sha256_transformed": "b589180c395874fec62fdc5670d79362477e5cc10bec37720b84b6908e0722b5",
+      "sha256_current": "277325da0b2cf6bcbe0d7757a5a61967cdc9f40730df74d13261ca8522147a2f",
+      "patched": true,
+      "patch_reason": "pi-harness"
+    },
+    {
+      "source": "jmo",
+      "upstream_path": "skills/ste/SKILL.md",
+      "installed_path": "skills/ste/SKILL.md",
+      "sha256_transformed": "19c326cb3b96a7054cbcb7f67800f8dd28f5678450c35aaf7d4ab4ce3706b0bd",
+      "sha256_current": "19c326cb3b96a7054cbcb7f67800f8dd28f5678450c35aaf7d4ab4ce3706b0bd",
+      "patched": false
+    },
+    {
+      "source": "jmo",
+      "upstream_path": "skills/better-ui/LICENSE",
+      "installed_path": "skills/better-ui/LICENSE",
+      "sha256_transformed": "ed1dfe988fc40511b4845ccd9050a143a2002fee3bedc8064c47fa342b5d8d4f",
+      "sha256_current": "ed1dfe988fc40511b4845ccd9050a143a2002fee3bedc8064c47fa342b5d8d4f",
+      "patched": false
+    },
+    {
+      "source": "jmo",
+      "upstream_path": "skills/better-ui/SKILL.md",
+      "installed_path": "skills/better-ui/SKILL.md",
+      "sha256_transformed": "fb9807bb5c59a3ca9d4a27b25f56b36e5596251d280fb30c4b7f2ff8b6f4fe2d",
+      "sha256_current": "fb9807bb5c59a3ca9d4a27b25f56b36e5596251d280fb30c4b7f2ff8b6f4fe2d",
+      "patched": false
+    },
+    {
+      "source": "jmo",
+      "upstream_path": "skills/better-ui/agents/openai.yaml",
+      "installed_path": "skills/better-ui/agents/openai.yaml",
+      "sha256_transformed": "799e0b58bded32edf5c217f97e08c364660ec24234978b2e3f7dee1868bea871",
+      "sha256_current": "799e0b58bded32edf5c217f97e08c364660ec24234978b2e3f7dee1868bea871",
+      "patched": false
+    },
+    {
+      "source": "jmo",
+      "upstream_path": "skills/better-ui/animations.md",
+      "installed_path": "skills/better-ui/animations.md",
+      "sha256_transformed": "0e9ee790191d0761a6adf27fdf1e4279d79ecbe5d0d916fc331a28a8c86f39b3",
+      "sha256_current": "0e9ee790191d0761a6adf27fdf1e4279d79ecbe5d0d916fc331a28a8c86f39b3",
+      "patched": false
+    },
+    {
+      "source": "jmo",
+      "upstream_path": "skills/better-ui/enter-exit.md",
+      "installed_path": "skills/better-ui/enter-exit.md",
+      "sha256_transformed": "de087d3bc69461343409c275dea7d94bca6c1158558b887b7909ce505cdfa70a",
+      "sha256_current": "de087d3bc69461343409c275dea7d94bca6c1158558b887b7909ce505cdfa70a",
+      "patched": false
+    },
+    {
+      "source": "jmo",
+      "upstream_path": "skills/better-ui/icon-transitions.md",
+      "installed_path": "skills/better-ui/icon-transitions.md",
+      "sha256_transformed": "676b344e7b22c37692a520c7ea2ab8fad3b3c8943a833f8133e51042297e9f06",
+      "sha256_current": "676b344e7b22c37692a520c7ea2ab8fad3b3c8943a833f8133e51042297e9f06",
+      "patched": false
+    },
+    {
+      "source": "jmo",
+      "upstream_path": "skills/better-ui/icons.md",
+      "installed_path": "skills/better-ui/icons.md",
+      "sha256_transformed": "eac6195bb5d5ba77efd6d9d7751295a7b0d4dadf6a68146639091b02f1e3dbbd",
+      "sha256_current": "eac6195bb5d5ba77efd6d9d7751295a7b0d4dadf6a68146639091b02f1e3dbbd",
+      "patched": false
+    },
+    {
+      "source": "jmo",
+      "upstream_path": "skills/better-ui/performance.md",
+      "installed_path": "skills/better-ui/performance.md",
+      "sha256_transformed": "db59db84ab371903b7ebdb69f1e92bdc0f2e041331d9dd65d312e4d1b5d449d6",
+      "sha256_current": "db59db84ab371903b7ebdb69f1e92bdc0f2e041331d9dd65d312e4d1b5d449d6",
+      "patched": false
+    },
+    {
+      "source": "jmo",
+      "upstream_path": "skills/better-ui/surfaces.md",
+      "installed_path": "skills/better-ui/surfaces.md",
+      "sha256_transformed": "35a76b7c4e6da0fc933559e73ca8712fb7b804c383c6f69c25be3b9616ff2721",
+      "sha256_current": "35a76b7c4e6da0fc933559e73ca8712fb7b804c383c6f69c25be3b9616ff2721",
+      "patched": false
+    },
+    {
+      "source": "jmo",
+      "upstream_path": "skills/animate/LICENSE",
+      "installed_path": "skills/animate/LICENSE",
+      "sha256_transformed": "4ff5bdb7887ec1435c9cab0e8d1a7caee704d894d65c2a008ccc68b1cc2f260b",
+      "sha256_current": "4ff5bdb7887ec1435c9cab0e8d1a7caee704d894d65c2a008ccc68b1cc2f260b",
+      "patched": false
+    },
+    {
+      "source": "jmo",
+      "upstream_path": "skills/animate/RECIPES.md",
+      "installed_path": "skills/animate/RECIPES.md",
+      "sha256_transformed": "21ff63d84391db8d96ecdf9170095f55a42c836ccc36fd3269c4772bab031ba2",
+      "sha256_current": "21ff63d84391db8d96ecdf9170095f55a42c836ccc36fd3269c4772bab031ba2",
+      "patched": false
+    },
+    {
+      "source": "jmo",
+      "upstream_path": "skills/animate/SKILL.md",
+      "installed_path": "skills/animate/SKILL.md",
+      "sha256_transformed": "b8ede161270458e6ae2e45e8a1985373515d4c63de5568ddb0f9012d7634356c",
+      "sha256_current": "b8ede161270458e6ae2e45e8a1985373515d4c63de5568ddb0f9012d7634356c",
+      "patched": false
+    },
+    {
+      "source": "jmo",
+      "upstream_path": "skills/agentation/LICENSE",
+      "installed_path": "skills/agentation/LICENSE",
+      "sha256_transformed": "29eb64b5c188e2d6f739a8beadf09bcbb3a386bf78ae44e07343975331fd9775",
+      "sha256_current": "29eb64b5c188e2d6f739a8beadf09bcbb3a386bf78ae44e07343975331fd9775",
+      "patched": false
+    },
+    {
+      "source": "jmo",
+      "upstream_path": "skills/agentation/SKILL.md",
+      "installed_path": "skills/agentation/SKILL.md",
+      "sha256_transformed": "09f4fee606d9f354b4e16eff5a83b3de1b5c35f89aa430c1e0976f214294f4c7",
+      "sha256_current": "7c38c029e283ba6d63a649d0b956437d901128b1217f4d5f3aff72ba6b5d30f9",
+      "patched": true,
+      "patch_reason": "pi-harness"
+    },
+    {
+      "source": "jmo",
+      "upstream_path": "skills/codex/SKILL.md",
+      "installed_path": "skills/codex/SKILL.md",
+      "sha256_transformed": "bb44844896341483a0952f229852b67ec9ed372def7e3def92ec45c2e3dc3020",
+      "sha256_current": "8430838d7d2793fd67b5cf21130c4d58a91bfbb1b2bdc166acf8534e454b477f",
+      "patched": true,
+      "patch_reason": "pi-harness"
+    },
+    {
+      "source": "jmo",
+      "upstream_path": "plugins/jmo-supabase/.claude-plugin/plugin.json",
+      "installed_path": "mcp/supabase/.claude-plugin/plugin.json",
+      "sha256_transformed": "ea19d9e6cbe758880b94d122a394512335d6d6e5a57e4c0592c1e553581f851a",
+      "sha256_current": "ea19d9e6cbe758880b94d122a394512335d6d6e5a57e4c0592c1e553581f851a",
+      "patched": false
+    },
+    {
+      "source": "jmo",
+      "upstream_path": "plugins/jmo-supabase/.mcp.json",
+      "installed_path": "mcp/supabase/.mcp.json",
+      "sha256_transformed": "fa5fdfdb5f9c984a0844e0bd7f743c43122b406a2cdadb9efc1705c2dc5b33d3",
+      "sha256_current": "fa5fdfdb5f9c984a0844e0bd7f743c43122b406a2cdadb9efc1705c2dc5b33d3",
+      "patched": false
+    },
+    {
+      "source": "jmo",
+      "upstream_path": "plugins/jmo-neon/.claude-plugin/plugin.json",
+      "installed_path": "mcp/neon/.claude-plugin/plugin.json",
+      "sha256_transformed": "5d684159e0b59fd9f954e7b4545155bf4986763345a5ab48e6fc9317a35ae614",
+      "sha256_current": "5d684159e0b59fd9f954e7b4545155bf4986763345a5ab48e6fc9317a35ae614",
+      "patched": false
+    },
+    {
+      "source": "jmo",
+      "upstream_path": "plugins/jmo-neon/.mcp.json",
+      "installed_path": "mcp/neon/.mcp.json",
+      "sha256_transformed": "4c78e4dd9a830d0777a4fd891161cf0eac6ebeab37c19d2fa78600a08ef305ef",
+      "sha256_current": "4c78e4dd9a830d0777a4fd891161cf0eac6ebeab37c19d2fa78600a08ef305ef",
+      "patched": false
+    },
+    {
+      "source": "jmo",
+      "upstream_path": "plugins/jmo-stripe/.claude-plugin/plugin.json",
+      "installed_path": "mcp/stripe/.claude-plugin/plugin.json",
+      "sha256_transformed": "83a31395356e21a195e3c37602fadf41e88aa2af8739fc5097da61dac4294cfd",
+      "sha256_current": "83a31395356e21a195e3c37602fadf41e88aa2af8739fc5097da61dac4294cfd",
+      "patched": false
+    },
+    {
+      "source": "jmo",
+      "upstream_path": "plugins/jmo-stripe/.mcp.json",
+      "installed_path": "mcp/stripe/.mcp.json",
+      "sha256_transformed": "c8425624d85f6f4ed5e93465d5d423bf18ee8e0d1d3fe444e8fb22ed52614475",
+      "sha256_current": "c8425624d85f6f4ed5e93465d5d423bf18ee8e0d1d3fe444e8fb22ed52614475",
+      "patched": false
+    },
+    {
+      "source": "lottie",
+      "upstream_path": "skills/motion-design/SKILL.md",
+      "installed_path": "skills/motion-design/SKILL.md",
+      "sha256_current": "4687aa012b5a2b48a5f6f8abad79c97250e71b6609890d8dd41fa3c7562b42b6",
+      "sha256_transformed": "8729ecbc7e5736c1295baaa8ba0384bb4b1aac9cf91b83fcdc64d9548a57bb19",
+      "patched": true,
+      "patch_reason": "frontmatter"
+    },
+    {
+      "source": "lottie",
+      "upstream_path": "skills/motion-design/director/choreography.md",
+      "installed_path": "skills/motion-design/director/choreography.md",
+      "sha256_current": "c81257b56160b9b2f3d99f78d4b8172b425c22d9ca73be06d3ffaa7305a34deb",
+      "sha256_transformed": "c81257b56160b9b2f3d99f78d4b8172b425c22d9ca73be06d3ffaa7305a34deb",
+      "patched": false
+    },
+    {
+      "source": "lottie",
+      "upstream_path": "skills/motion-design/director/context-adaptation.md",
+      "installed_path": "skills/motion-design/director/context-adaptation.md",
+      "sha256_current": "550e96a1c8c369513304ee74c0e89b63168bc7287b83e9ed5685bb65609986b3",
+      "sha256_transformed": "550e96a1c8c369513304ee74c0e89b63168bc7287b83e9ed5685bb65609986b3",
+      "patched": false
+    },
+    {
+      "source": "lottie",
+      "upstream_path": "skills/motion-design/director/core-philosophy.md",
+      "installed_path": "skills/motion-design/director/core-philosophy.md",
+      "sha256_current": "7aaa8a065d9940dad0198cf9cfe74979008495e6daf87f46f9022fff1b6a85e9",
+      "sha256_transformed": "7aaa8a065d9940dad0198cf9cfe74979008495e6daf87f46f9022fff1b6a85e9",
+      "patched": false
+    },
+    {
+      "source": "lottie",
+      "upstream_path": "skills/motion-design/director/decision-framework.md",
+      "installed_path": "skills/motion-design/director/decision-framework.md",
+      "sha256_current": "4b6758da6742475c928b4f8be8c662f4b5ed0964468ba7760df8f7635c779358",
+      "sha256_transformed": "4b6758da6742475c928b4f8be8c662f4b5ed0964468ba7760df8f7635c779358",
+      "patched": false
+    },
+    {
+      "source": "lottie",
+      "upstream_path": "skills/motion-design/director/disney-principles.md",
+      "installed_path": "skills/motion-design/director/disney-principles.md",
+      "sha256_current": "39024711890c2684a3434659a4d95a52ca8231facea74e87e79503054aaca671",
+      "sha256_transformed": "39024711890c2684a3434659a4d95a52ca8231facea74e87e79503054aaca671",
+      "patched": false
+    },
+    {
+      "source": "lottie",
+      "upstream_path": "skills/motion-design/director/emotion-mapping.md",
+      "installed_path": "skills/motion-design/director/emotion-mapping.md",
+      "sha256_current": "a279e55a3f52a9f5830d38dc54679c652d9a5c26f0dd360700c16e23766d468b",
+      "sha256_transformed": "a279e55a3f52a9f5830d38dc54679c652d9a5c26f0dd360700c16e23766d468b",
+      "patched": false
+    },
+    {
+      "source": "lottie",
+      "upstream_path": "skills/motion-design/director/motion-personality.md",
+      "installed_path": "skills/motion-design/director/motion-personality.md",
+      "sha256_current": "66a3623b6654869482c02157ca791034a614ca6dcb02a8112049e28d292ee18a",
+      "sha256_transformed": "66a3623b6654869482c02157ca791034a614ca6dcb02a8112049e28d292ee18a",
+      "patched": false
+    },
+    {
+      "source": "lottie",
+      "upstream_path": "skills/motion-design/director/narrative-structure.md",
+      "installed_path": "skills/motion-design/director/narrative-structure.md",
+      "sha256_current": "d49db19db40425dec027c3012d553b50fd74ed79e27ace9dec1226796469061b",
+      "sha256_transformed": "d49db19db40425dec027c3012d553b50fd74ed79e27ace9dec1226796469061b",
+      "patched": false
+    },
+    {
+      "source": "lottie",
+      "upstream_path": "skills/motion-design/patterns/ambient-continuous.md",
+      "installed_path": "skills/motion-design/patterns/ambient-continuous.md",
+      "sha256_current": "f9cfa00d3325dceadcb9ffd77dcb5dcbc51d34121f3b1f162979939006056773",
+      "sha256_transformed": "f9cfa00d3325dceadcb9ffd77dcb5dcbc51d34121f3b1f162979939006056773",
+      "patched": false
+    },
+    {
+      "source": "lottie",
+      "upstream_path": "skills/motion-design/patterns/entrance-exit.md",
+      "installed_path": "skills/motion-design/patterns/entrance-exit.md",
+      "sha256_current": "70b3fc3a8d58ebe58e293e643b78fd13750d9c8ef1c8fc5fe85e52f7378cbd91",
+      "sha256_transformed": "70b3fc3a8d58ebe58e293e643b78fd13750d9c8ef1c8fc5fe85e52f7378cbd91",
+      "patched": false
+    },
+    {
+      "source": "lottie",
+      "upstream_path": "skills/motion-design/patterns/multi-element.md",
+      "installed_path": "skills/motion-design/patterns/multi-element.md",
+      "sha256_current": "46c8da91843c593deb763a4a7fa32849bdaeb7a7ecd4d559e3b21bcc976f2c46",
+      "sha256_transformed": "46c8da91843c593deb763a4a7fa32849bdaeb7a7ecd4d559e3b21bcc976f2c46",
+      "patched": false
+    },
+    {
+      "source": "lottie",
+      "upstream_path": "skills/motion-design/patterns/state-feedback.md",
+      "installed_path": "skills/motion-design/patterns/state-feedback.md",
+      "sha256_current": "dac86388c2d8fcdfc2f194b4f8877caedcdc010df9ce29d27dfc99d08cf8c60e",
+      "sha256_transformed": "dac86388c2d8fcdfc2f194b4f8877caedcdc010df9ce29d27dfc99d08cf8c60e",
+      "patched": false
+    },
+    {
+      "source": "lottie",
+      "upstream_path": "skills/motion-design/reference/property-selection.md",
+      "installed_path": "skills/motion-design/reference/property-selection.md",
+      "sha256_current": "053d830795fc824fed27618fbd18084207af6aeed55b73c0a6e1d5665de894ae",
+      "sha256_transformed": "053d830795fc824fed27618fbd18084207af6aeed55b73c0a6e1d5665de894ae",
+      "patched": false
+    },
+    {
+      "source": "lottie",
+      "upstream_path": "skills/motion-design/reference/quality-checklist.md",
+      "installed_path": "skills/motion-design/reference/quality-checklist.md",
+      "sha256_current": "c11bf193b700d9c9ebc5d871f1d5f193bccc441c4eccc0509b53a40d6e8dc558",
+      "sha256_transformed": "c11bf193b700d9c9ebc5d871f1d5f193bccc441c4eccc0509b53a40d6e8dc558",
+      "patched": false
+    },
+    {
+      "source": "lottie",
+      "upstream_path": "skills/motion-design/reference/timing-easing-tables.md",
+      "installed_path": "skills/motion-design/reference/timing-easing-tables.md",
+      "sha256_current": "e478f3b99c4cac3f96eca008e20f8808d4cfae165f5799f260092baf9b6ebcff",
+      "sha256_transformed": "e478f3b99c4cac3f96eca008e20f8808d4cfae165f5799f260092baf9b6ebcff",
+      "patched": false
+    },
+    {
+      "source": "lottie",
+      "upstream_path": "skills/motion-design/reference/troubleshooting.md",
+      "installed_path": "skills/motion-design/reference/troubleshooting.md",
+      "sha256_current": "69e5aaeee108231d51187143ae3fce4db7a42936f10682908ca9462a008a047a",
+      "sha256_transformed": "69e5aaeee108231d51187143ae3fce4db7a42936f10682908ca9462a008a047a",
+      "patched": false
+    },
+    {
+      "source": "dimensional-drawing",
+      "upstream_path": "skills/dimensional-drawing/SKILL.md",
+      "installed_path": "skills/dimensional-drawing/SKILL.md",
+      "sha256_transformed": "b4fce1c4556d22734a13f949da9d914df0436d5f2170191f6ec78a879d0ac5ba",
+      "sha256_current": "b1c602b7470eae7afe6c1e06b9adacaab998cf85b66bdd2d6d9c7187f5e30d4f",
+      "patched": true,
+      "patch_reason": "debrand-client"
+    },
+    {
+      "source": "dimensional-drawing",
+      "upstream_path": "skills/dimensional-drawing/examples/card-sheet.html",
+      "installed_path": "skills/dimensional-drawing/examples/card-sheet.html",
+      "sha256_transformed": "197b7ef3b9deb7e7698c8bbb88812ec446536bcadc4b8d2e07084ac222776fab",
+      "sha256_current": "197b7ef3b9deb7e7698c8bbb88812ec446536bcadc4b8d2e07084ac222776fab",
+      "patched": false
+    },
+    {
+      "source": "dimensional-drawing",
+      "upstream_path": "skills/dimensional-drawing/examples/dialog-sheet.html",
+      "installed_path": "skills/dimensional-drawing/examples/dialog-sheet.html",
+      "sha256_transformed": "6a407cf4f827c4e1996c09eceedc592c8952a4b5a48d0ecef63440a334308ff2",
+      "sha256_current": "6a407cf4f827c4e1996c09eceedc592c8952a4b5a48d0ecef63440a334308ff2",
+      "patched": false
+    }
+  ],
+  "patches_note": "Files with patched=true were adapted for Pi harness compatibility; sha256_transformed remains the immutable post-vendor baseline."
+}

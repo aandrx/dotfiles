@@ -1,0 +1,58 @@
+[config.wallpaper]
+command = "awww"
+arguments = ["img", "--transition-type", "any", "--transition-fps", "60"]
+set = false
+
+[templates.waybar]
+input_path = '~/.config/matugen/templates/colors.css'
+output_path = '~/.config/waybar/colors.css'
+post_hook = 'pkill -SIGUSR2 waybar 2>/dev/null || true'
+
+[templates.kitty]
+input_path = '~/.config/matugen/templates/kitty-colors.conf'
+output_path = '~/.config/kitty/colors.conf'
+post_hook = "kill -SIGUSR1 $(pidof kitty) 2>/dev/null || true"
+
+[templates.hyprland]
+input_path = '~/.config/matugen/templates/hyprland-colors.conf'
+output_path = '~/.config/hypr/colors.conf'
+post_hook = 'hyprctl reload 2>/dev/null || true'
+
+[templates.niri]
+input_path = '~/.config/matugen/templates/niri-colors.css'
+output_path = '~/.config/niri/colors.css'
+
+[templates.niri-waybar]
+input_path = '~/.config/matugen/templates/waybar-niri-colors.css'
+output_path = '~/.config/waybar-niri/colors.css'
+post_hook = 'pkill -SIGUSR2 waybar 2>/dev/null || true'
+
+# [templates.apps-niri]
+# post_hook = 'sh -c "kill -SIGUSR1 $(pidof kitty) 2>/dev/null"'
+
+# GTK colours are generated separately in light mode by config-gtk.toml,
+# invoked from wppicker-niri.sh and restore-wallpaper.sh.
+
+[templates.rofi]
+input_path = '~/.config/matugen/templates/rofi-colors.rasi'
+output_path = '~/.config/rofi/colors.rasi'
+
+[templates.cava]
+input_path = '~/.config/matugen/templates/matugen-cava'
+output_path = '~/.config/cava/config'
+post_hook = "pkill -USR1 cava 2>/dev/null || true"
+
+[templates.spicetify]
+input_path = '~/.config/matugen/templates/spotify-colors.ini'
+output_path = '~/.config/spicetify/Themes/text/color.ini'
+
+[templates.vesktop]
+input_path = '~/.config/matugen/templates/midnight-discord.css'
+output_path = '~/.config/vesktop/themes/matugen.css'
+
+[templates.Obsidian]
+input_path = '~/.config/matugen/templates/obsidian-theme.css'
+output_path = '~/.config/matugen/generated/obsidian-theme.css'
+#post_hook = 'mkdir -p ~/Documents/pensive/.obsidian/snippets; ln -nfs ~/.config/matugen/generated/obsidian-theme.css ~/Documents/pensive/.obsidian/snippets/matugen-theme.css'
+#post_hook = 'sh -c "mkdir -p ~/Documents/obsidian/.obsidian/snippets && ln -nfs ~/.config/matugen/generated/obsidian-theme.css ~/.obsidian/snippets/matugen-theme.css"'
+post_hook = 'sh -c "ln -nfs ~/.config/matugen/generated/obsidian-theme.css ~/Documents/obsidian/.obsidian/snippets/matugen-theme.css"'

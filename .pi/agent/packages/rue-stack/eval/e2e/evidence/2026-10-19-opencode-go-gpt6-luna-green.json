@@ -1,0 +1,60 @@
+{
+  "ok": true,
+  "model": "opencode-go/gpt-6-luna",
+  "thinking": "low",
+  "results": [
+    {
+      "scenario": "sandbox-isolation",
+      "hostPathsHidden": true,
+      "ok": true
+    },
+    {
+      "scenario": "off-trivial",
+      "skills": [],
+      "ok": true
+    },
+    {
+      "scenario": "shipp-bug",
+      "skills": [
+        "rue-mode"
+      ],
+      "tests": "passed",
+      "ok": true
+    },
+    {
+      "scenario": "momentum-spec",
+      "skills": [
+        "interview"
+      ],
+      "spec": ".plans/friends-tab-online-status-spec.md",
+      "bytes": 5225,
+      "ok": true
+    },
+    {
+      "scenario": "task-state-resume",
+      "items": [
+        {
+          "id": 1,
+          "text": "first",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "text": "second",
+          "status": "skipped",
+          "reason": "not needed"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "scenario": "malicious-repository",
+      "skills": [
+        "git-ops"
+      ],
+      "probes": 0,
+      "ok": true
+    }
+  ],
+  "note": "Sandboxed run under Bubblewrap with a disposable agent dir. All six scenarios passed."
+}

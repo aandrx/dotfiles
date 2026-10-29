@@ -1,0 +1,556 @@
+/*
+ * ╔════════════════════════════════════════════════════════════╗
+ * ║  ML4W Enhanced Style for arch-hyprland                     ║
+ * ║  Combines: Islands minimalism + ML4W polish                ║
+ * ║  Colors: Matugen Material Design 3                         ║
+ * ╚════════════════════════════════════════════════════════════╝
+ */
+
+/* Import Material Design colors from matugen */
+@import 'colors.css';
+
+/* ═══════════════════════════════════════════════════════════ */
+/*  GLOBAL WINDOW STYLING                                       */
+/* ═══════════════════════════════════════════════════════════ */
+
+* {
+    border: none;
+    font-family: "JetBrainsMono Nerd Font Propo", "Font Awesome 6 Free Solid";
+    font-weight: 600;
+    font-size: 14px;
+    min-height: 0;
+}
+
+window#waybar {
+    background-color: transparent;
+}
+
+tooltip {
+    background: @surface;
+    border: 2px solid @outline;
+    border-radius: 12px;
+    padding: 8px 15px;
+}
+
+tooltip label {
+    color: @on_surface;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/*  MODULE GROUPS (Left, Center, Right)                        */
+/* ═══════════════════════════════════════════════════════════ */
+
+.modules-left {
+    background-color: @background;
+    border-radius: 12px;
+    padding: 4px 8px;
+    margin: 6px 0px 6px 8px;
+    border: 2px solid @outline;
+}
+
+.modules-center {
+    background-color: @background;
+    border-radius: 12px;
+    padding: 4px 8px;
+    margin: 6px 0px;
+    border: 2px solid @outline;
+}
+
+.modules-right {
+    background-color: @background;
+    border-radius: 12px;
+    padding: 4px 8px;
+    margin: 6px 8px 6px 0px;
+    border: 2px solid @outline;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/*  WORKSPACES (Hyprland)                                      */
+/* ═══════════════════════════════════════════════════════════ */
+
+#workspaces {
+    padding: 0px 4px;
+}
+
+#workspaces button {
+    padding: 0px 8px;
+    margin: 3px 3px;
+    border-radius: 8px;
+    color: @on_surface;
+    background-color: @surface;
+    transition: all 0.3s ease-in-out;
+    border: 2px solid @outline;
+}
+
+#workspaces button:hover {
+    color: @on_primary_container;
+    background: @primary_container;
+    border-color: @primary;
+}
+
+#workspaces button.active {
+    color: @on_primary;
+    background: @primary;
+    border-radius: 12px;
+    border-color: @primary;
+    min-width: 35px;
+    padding-left: 12px;
+    padding-right: 12px;
+    background-gradient-direction: vertical;
+    background-gradient-from: @primary;
+    background-gradient-to: @primary_container;
+}
+
+#workspaces button.urgent {
+    color: @on_error;
+    background: @error;
+    border-color: @error;
+    animation: blink-urgent 1.5s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/*  WINDOW TITLE (Center)                                      */
+/* ═══════════════════════════════════════════════════════════ */
+
+#window {
+    color: @on_surface;
+    background: transparent;
+    padding: 2px 15px;
+    margin: 0px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.3s ease-out;
+}
+
+#window.empty {
+    background-color: transparent;
+    padding: 0px;
+    border: none;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/*  CLOCK                                                       */
+/* ═══════════════════════════════════════════════════════════ */
+
+#clock {
+    color: @on_surface;
+    background-color: transparent;
+    border-radius: 8px;
+    padding: 2px 10px;
+    margin: 0px;
+    transition: all 0.3s ease-out;
+}
+
+#clock:hover {
+    color: @on_primary_container;
+    background: @primary_container;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/*  SYSTEM TRAY                                                */
+/* ═══════════════════════════════════════════════════════════ */
+
+#tray {
+    background-color: transparent;
+    padding: 2px 10px;
+    margin: 0px;
+    border-radius: 8px;
+}
+
+#tray > .passive {
+    -gtk-icon-effect: dim;
+}
+
+#tray > .needs-attention {
+    -gtk-icon-effect: highlight;
+    background-color: @error;
+    border-radius: 6px;
+    padding: 2px 4px;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/*  CUSTOM MODULES (Notifications, Power, etc.)                */
+/* ═══════════════════════════════════════════════════════════ */
+
+#custom-notification {
+    color: @on_surface;
+    background-color: transparent;
+    padding: 2px 10px;
+    margin: 0px;
+    border-radius: 8px;
+    transition: all 0.3s ease-out;
+}
+
+#custom-notification:hover {
+    background: @primary_container;
+    color: @on_primary_container;
+}
+
+#custom-power_profile {
+    color: @on_surface;
+    background-color: transparent;
+    padding: 2px 10px;
+    margin: 0px;
+    border-radius: 8px;
+}
+
+#custom-power_profile.performance {
+    color: @error;
+}
+
+#custom-power_profile.balanced {
+    color: @primary;
+}
+
+#custom-power_profile.power-saver {
+    color: @tertiary;
+}
+
+#custom-hypridle,
+#custom-exit,
+#custom-lock,
+#custom-cliphist,
+#custom-menu,
+#custom-swaync {
+    color: @on_surface;
+    background-color: transparent;
+    padding: 2px 10px;
+    margin: 0px;
+    border-radius: 8px;
+    transition: all 0.3s ease-out;
+}
+
+#custom-hypridle:hover,
+#custom-exit:hover,
+#custom-lock:hover,
+#custom-cliphist:hover,
+#custom-menu:hover,
+#custom-swaync:hover {
+    background: @primary_container;
+    color: @on_primary_container;
+}
+
+/* Updates with status colors */
+#custom-updates {
+    color: @on_surface;
+    background-color: transparent;
+    padding: 2px 10px;
+    margin: 0px;
+    border-radius: 8px;
+}
+
+#custom-updates.green {
+    color: @tertiary;
+}
+
+#custom-updates.yellow {
+    color: @secondary;
+}
+
+#custom-updates.red {
+    color: @error;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/*  HARDWARE MONITORING (CPU, Memory, Disk, Temp)             */
+/* ═══════════════════════════════════════════════════════════ */
+
+#cpu,
+#memory,
+#disk,
+#temperature {
+    color: @on_surface;
+    background-color: transparent;
+    padding: 2px 10px;
+    margin: 0px;
+    border-radius: 8px;
+    transition: all 0.3s ease-out;
+}
+
+#cpu:hover,
+#memory:hover,
+#disk:hover,
+#temperature:hover {
+    background: @primary_container;
+    color: @on_primary_container;
+}
+
+#temperature.critical {
+    color: @error;
+    animation: blink-critical 1s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/*  BACKLIGHT                                                   */
+/* ═══════════════════════════════════════════════════════════ */
+
+#backlight {
+    color: @on_surface;
+    background-color: transparent;
+    padding: 2px 10px;
+    margin: 0px;
+    border-radius: 8px;
+    transition: all 0.3s ease-out;
+}
+
+#backlight:hover {
+    background: @primary_container;
+    color: @on_primary_container;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/*  BATTERY                                                     */
+/* ═══════════════════════════════════════════════════════════ */
+
+#battery {
+    color: @on_surface;
+    background-color: transparent;
+    padding: 2px 10px;
+    margin: 0px;
+    border-radius: 8px;
+    transition: all 0.3s ease-out;
+}
+
+#battery:hover {
+    background: @primary_container;
+    color: @on_primary_container;
+}
+
+#battery.charging,
+#battery.plugged {
+    color: @tertiary;
+    background-color: transparent;
+}
+
+#battery.warning:not(.charging) {
+    color: @secondary;
+    background-color: transparent;
+}
+
+#battery.critical:not(.charging) {
+    color: @on_error;
+    background-color: @error;
+    animation: blink-critical 0.5s linear infinite alternate;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/*  AUDIO (Pulseaudio / Wireplumber)                          */
+/* ═══════════════════════════════════════════════════════════ */
+
+#pulseaudio,
+#wireplumber {
+    color: @on_surface;
+    background-color: transparent;
+    padding: 2px 10px;
+    margin: 0px;
+    border-radius: 8px;
+    transition: all 0.3s ease-out;
+}
+
+#pulseaudio:hover,
+#wireplumber:hover {
+    background: @primary_container;
+    color: @on_primary_container;
+}
+
+#pulseaudio.muted,
+#wireplumber.muted {
+    color: @error;
+    background-color: transparent;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/*  NETWORK                                                     */
+/* ═══════════════════════════════════════════════════════════ */
+
+#network {
+    color: @on_surface;
+    background-color: transparent;
+    padding: 2px 10px;
+    margin: 0px;
+    border-radius: 8px;
+    transition: all 0.3s ease-out;
+}
+
+#network:hover {
+    background: @primary_container;
+    color: @on_primary_container;
+}
+
+#network.disconnected,
+#network.disabled {
+    color: @error;
+    background-color: transparent;
+}
+
+#network.linked {
+    color: @secondary;
+}
+
+#network.wifi {
+    color: @tertiary;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/*  BLUETOOTH                                                   */
+/* ═══════════════════════════════════════════════════════════ */
+
+#bluetooth {
+    color: @on_surface;
+    background-color: transparent;
+    padding: 2px 10px;
+    margin: 0px;
+    border-radius: 8px;
+    transition: all 0.3s ease-out;
+}
+
+#bluetooth:hover {
+    background: @primary_container;
+    color: @on_primary_container;
+}
+
+#bluetooth.disabled,
+#bluetooth.off {
+    color: @outline;
+}
+
+#bluetooth.connected {
+    color: @primary;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/*  MEDIA PLAYER (MPD / MPRIS)                                 */
+/* ═══════════════════════════════════════════════════════════ */
+
+#mpd,
+#custom-media,
+#mpris {
+    color: @on_surface;
+    background-color: transparent;
+    padding: 2px 10px;
+    margin: 0px;
+    border-radius: 8px;
+}
+
+#mpd.paused,
+#custom-media.paused,
+#mpris.paused {
+    color: @outline;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/*  IDLE INHIBITOR                                             */
+/* ═══════════════════════════════════════════════════════════ */
+
+#idle_inhibitor {
+    color: @on_surface;
+    background-color: transparent;
+    padding: 2px 10px;
+    margin: 0px;
+    border-radius: 8px;
+    transition: all 0.3s ease-out;
+}
+
+#idle_inhibitor.activated {
+    color: @on_primary;
+    background-color: @primary;
+}
+
+#idle_inhibitor:hover {
+    background: @primary_container;
+    color: @on_primary_container;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/*  KEYBOARD STATE                                             */
+/* ═══════════════════════════════════════════════════════════ */
+
+#keyboard-state {
+    padding: 2px 10px;
+    margin: 0px;
+}
+
+#keyboard-state > label {
+    padding: 0px 3px;
+}
+
+#keyboard-state > label.locked {
+    background-color: @error;
+    color: @on_error;
+    border-radius: 6px;
+    padding: 2px 6px;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/*  PRIVACY INDICATORS (Microphone, Camera)                    */
+/* ═══════════════════════════════════════════════════════════ */
+
+#privacy {
+    padding: 2px 10px;
+    margin: 0px;
+}
+
+#privacy-item {
+    padding: 0px 3px;
+    color: @on_surface;
+}
+
+#privacy-item.screenshare {
+    color: @error;
+    background-color: transparent;
+    padding: 2px 6px;
+    border-radius: 6px;
+}
+
+#privacy-item.audio-in,
+#privacy-item.audio-out {
+    color: @secondary;
+    padding: 2px 6px;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/*  ANIMATIONS & EFFECTS                                       */
+/* ═══════════════════════════════════════════════════════════ */
+
+@keyframes blink-critical {
+    from {
+        background-color: @error;
+        color: @on_error;
+    }
+    to {
+        background-color: @background;
+        color: @on_surface;
+    }
+}
+
+@keyframes blink-urgent {
+    from {
+        background-color: @error;
+        color: @on_error;
+        border-color: @error;
+    }
+    to {
+        background-color: @surface;
+        color: @on_surface;
+        border-color: @outline;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/*  LANGUAGE INDICATOR                                         */
+/* ═══════════════════════════════════════════════════════════ */
+
+#language {
+    color: @on_surface;
+    background-color: transparent;
+    padding: 2px 10px;
+    margin: 0px;
+    border-radius: 8px;
+    transition: all 0.3s ease-out;
+}
+
+#language:hover {
+    background: @primary_container;
+    color: @on_primary_container;
+}

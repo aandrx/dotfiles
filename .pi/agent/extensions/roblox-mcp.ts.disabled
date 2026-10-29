@@ -1,0 +1,59 @@
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { Type } from "typebox";
+import { readFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
+import { homedir } from "node:os";
+
+const MCP_URL = process.env.RBX_MCP_URL ?? "http://localhost:3668/mcp";
+
+function getToken(): string {
+  if (process.env.RBX_MCP_TOKEN) return process.env.RBX_MCP_TOKEN.trim();
+  const p = join(homedir(), ".config", "rbx-mcp-token");
+  if (existsSync(p)) return readFileSync(p, "utf8").trim();
+  return "";
+}
+
+export default function (pi: ExtensionAPI) {
+  pi.registerTool({
+    name: "roblox_mcp",
+    label: "Roblox MCP",
+    description:
+      "Call a tool on the Roblox Studio MCP bridge (tailscale-only). Use for listing studios, reading/writing scripts, running code in Studio. Common tools: list_roblox_studios, list_files, read_script, write_script, run_code. Pass through tool name and args object.",
+    parameters: Type.Object({
+      tool: Type.String({ description: "MCP tool name, e.g. list_roblox_studios" }),
+      args: Type.Optional(Type.Any({ description: "Args object for the tool" })),
+    }),
+    async execute(_id, params, _signal, _onUpdate, _ctx) {
+      const token = getToken();
+      if (!token) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "Missing RBX token. Set env RBX_MCP_TOKEN or write it to ~/.config/rbx-mcp-token",
+            },
+          ],
+          isError: true,
+          details: {},
+        };
+      }
+      const res = await fetch(MCP_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ tool: (params as any).tool, args: (params as any).args ?? {} }),
+      });
+      const text = await res.text();
+      if (!res.ok) {
+        return {
+          content: [{ type: "text", text: `MCP HTTP ${res.status}: ${text.slice(0, 2000)}` }],
+          isError: true,
+          details: {},
+        };
+      }
+      return { content: [{ type: "text", text: text.slice(0, 20000) }], details: {} };
+    },
+  });
+}

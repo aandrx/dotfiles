@@ -1,0 +1,18 @@
+// Removed from ~/.config/waybar-niri/config.jsonc on 2026-10-24.
+//
+// "old-clock" was never referenced from modules-left/center/right.
+// "align"/"rotate" are not recognised by the battery module and were ignored
+// (waybar emits no warning for unknown keys).
+{
+  "old-clock": {
+    "tooltip": false,
+    "format": "{:%a %e, %H:%M}",
+    "on-click": "mode",
+    "on-scroll-up": "shift-up",
+    "on-scroll-down": "shift_down"
+  },
+  "battery-ignored-keys": {
+    "align": 0,
+    "rotate": 0
+  }
+}

@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+PI_DIR="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}"
+PI_ROOT="${PI_ROOT:-$HOME/.local/lib/node_modules/@earendil-works/pi-coding-agent}"
+AUTH_FILE="$PI_DIR/auth.json"
+JITI_FILE="$PI_ROOT/node_modules/jiti/lib/jiti-static.mjs"
+USAGE_FILE="$PI_DIR/npm/node_modules/pi-ollama-cloud/usage.ts"
+
+for path in "$AUTH_FILE" "$JITI_FILE" "$USAGE_FILE"; do
+  if [ ! -f "$path" ]; then
+    printf 'Required file not found: %s\n' "$path" >&2
+    exit 1
+  fi
+done
+
+# Read the credential inside Node; never expose it in process arguments.
+node --input-type=module - "$AUTH_FILE" "$USAGE_FILE" "$JITI_FILE" <<'NODE'
+const [authFile, usageFile, jitiFile] = process.argv.slice(2)
+const { readFile } = await import('node:fs/promises')
+let key
+try {
+  const auth = JSON.parse(await readFile(authFile, 'utf8'))
+  key = auth['ollama-cloud']?.key
+  if (typeof key !== 'string' || !key) throw new Error('missing credential')
+} catch {
+  console.error('Could not load the Ollama Cloud credential from local authentication.')
+  process.exit(1)
+}
+const { createJiti } = await import(jitiFile)
+const jiti = createJiti(usageFile)
+const usage = await jiti.import(usageFile)
+const data = await usage.fetchUsage(key)
+console.log(usage.formatUsage(data))
+NODE

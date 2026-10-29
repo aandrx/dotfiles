@@ -1,0 +1,6 @@
+# Tiered TLP profile: <= 20% on battery -> TLP power-saver, >= 25% -> balanced.
+#
+# Runs on battery capacity/status events. 85-tlp.rules is processed first, so
+# TLP's own AC/BAT decision has already been applied when this runs.
+# The script itself refuses to act while on AC.
+ACTION=="change", SUBSYSTEM=="power_supply", KERNEL=="BAT0", RUN+="/usr/local/sbin/power-profile-tier"

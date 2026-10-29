@@ -1,0 +1,90 @@
+// Zed settings
+//
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+//
+// To see all of Zed's default settings without changing your
+// custom settings, run zed: open default settings from the
+// command palette (cmd-shift-p / ctrl-shift-p)
+{
+  "project_panel": {
+    "dock": "left"
+  },
+  "outline_panel": {
+    "dock": "left"
+  },
+  "collaboration_panel": {
+    "dock": "left"
+  },
+  "git_panel": {
+    "dock": "left"
+  },
+  "ui_font_weight": 500.0,
+  "ui_font_family": "JetBrainsMono Nerd Font Propo",
+  "buffer_font_family": "JetBrainsMono Nerd Font Propo",
+  "edit_predictions": {
+    "provider": "copilot",
+  },
+  "ssh_connections": [],
+  "terminal": {
+    "working_directory": "current_project_directory",
+    "shell": {
+      "program": "zsh",
+    },
+  },
+  "agent": {
+    "dock": "right",
+    "profiles": {
+      
+    },
+    "favorite_models": [
+      {
+        "provider": "copilot_chat",
+        "model": "claude-opus-4.6",
+        "enable_thinking": true,
+      },
+      {
+        "provider": "copilot_chat",
+        "model": "claude-sonnet-4.6",
+        "enable_thinking": false,
+      },
+    ],
+    "tool_permissions": {
+      "default": "allow",
+    },
+    "default_profile": "ask",
+    "default_model": {
+      "effort": "high",
+      "enable_thinking": false,
+      "provider": "copilot_chat",
+      "model": "claude-sonnet-4.6",
+    },
+    "model_parameters": [],
+  },
+  "telemetry": {
+    "diagnostics": false,
+    "metrics": false,
+  },
+  "vim_mode": false,
+  "vim.leader": " ",
+  "icon_theme": {
+    "mode": "system",
+    "light": "Zed (Default)",
+    "dark": "Zed (Default)",
+  },
+  "base_keymap": "VSCode",
+  "ui_font_size": 15.0,
+  "buffer_font_size": 15.0,
+  "theme": {
+    "mode": "system",
+    "light": "Catppuccin Mocha",
+    "dark": "One Dark",
+  },
+  "buffer_font_features": {
+    "calt": false,
+  },
+  "soft_wrap": "editor_width",
+  "show_edit_predictions": false,
+  "show_completions_on_input": false,
+  "extend_comment_on_newline": false,
+}

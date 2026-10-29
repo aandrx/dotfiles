@@ -1,0 +1,13 @@
+# GTK-only matugen config, invoked with "-m light" from wppicker-niri.sh and
+# restore-wallpaper.sh so GTK apps follow a light palette from the wallpaper
+# while the compositor, bar and terminal stay dark.
+
+[config]
+
+[templates.gtk3]
+input_path = '~/.config/matugen/templates/gtk3-colors.css'
+output_path = '~/.config/gtk-3.0/colors.css'
+
+[templates.gtk4]
+input_path = '~/.config/matugen/templates/gtk4-colors.css'
+output_path = '~/.config/gtk-4.0/colors.css'
