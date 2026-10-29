@@ -77,20 +77,24 @@ snapshot uses the public GitHub handle and a GitHub noreply email for authorship
 Never add the private repository as a history source, merge its branches, or
 push its tags into this repository.
 
-This snapshot is prepared locally only. No remote or public repository has been
-created for it. A zero-findings Gitleaks result is evidence about recognizable
-secrets, not a guarantee against every privacy disclosure.
+The public distribution is `aandrx/dotfiles`. The separate
+`aandrx/dotfiles-private` repository retains private history and must remain
+private. Verify remote targets before every push; never use `--mirror` to copy
+refs or import the private repository's objects here.
 
-Before publishing:
+A zero-findings Gitleaks result is evidence about recognizable secrets, not a
+guarantee against every privacy disclosure. Use this release checklist for
+future snapshots and visibility changes as well:
 
-- [ ] Review every branch/tag and the intended commit author identity.
+
+- [x] Review the initial snapshot refs and public-handle/noreply commit identity.
 - [x] Choose an explicitly approved clean public snapshot, keeping private history separate.
-- [ ] Scan the exact public snapshot and, if retained, all its Git history.
-- [ ] Check that no ignored local notes or runtime files entered the export.
+- [x] Scan the initial public snapshot and its independent Git history.
+- [x] Check that no ignored local notes or runtime files entered the initial export.
 - [ ] Review binaries, license notices, package provenance, issues, releases,
       wiki content, and CI artifacts.
-- [ ] Pass tests and a scratch-HOME install without private services or auth.
+- [x] Pass the initial 70-test suite and scratch-HOME install without private services or auth.
 - [ ] Configure required privacy checks and available GitHub secret protections.
-- [ ] Obtain explicit approval to publish/change visibility.
+- [x] Obtain explicit approval for initial publication as `aandrx/dotfiles`.
 
 Do not check these boxes merely because the current working tree is clean.

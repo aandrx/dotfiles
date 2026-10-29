@@ -4,9 +4,9 @@ Ordinary folders and real filenames, with no chezmoi, templating engine, or
 hidden capture daemon. Read [AGENTS.md](AGENTS.md) before making changes and
 [PRIVACY.md](PRIVACY.md) before adding anything to Git.
 
-**Release status:** this is a locally prepared clean snapshot, not a clone of
-the private source history. It has not been published. Publication is a separate
-approval step; see `PRIVACY.md`. Original work is MIT-licensed under
+**Public distribution:** this repository starts from a clean snapshot, not a
+clone of the maintainer's private history. Private history must never be merged
+or pushed here; see `PRIVACY.md`. Original work is MIT-licensed under
 [LICENSE](LICENSE); third-party licenses remain component-specific. See
 [NOTICE.md](NOTICE.md).
 
@@ -54,12 +54,10 @@ must install Pi and authenticate themselves. The separately licensed local
 Review the source first. Maintenance scripts require Git, Python 3.10+, Bash
 4+, and GNU coreutils (`realpath`, `stat`, `sort`). They are tested on Linux;
 macOS needs compatible tools on PATH, and system configuration is Linux-only.
-No public remote is configured yet. After publication, replace
-`PUBLIC_REPOSITORY_URL` below with the approved public clone URL; do not clone
-or publish the maintainer's private-history repository instead.
+Clone the public distribution, not the separate private-history repository:
 
 ```sh
-git clone PUBLIC_REPOSITORY_URL ~/dotfiles
+git clone https://github.com/aandrx/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 ./scripts/install.sh --dry-run --no-deps
 ./scripts/install.sh --no-deps
