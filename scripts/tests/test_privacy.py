@@ -143,6 +143,7 @@ class PrivacyCheckerTests(RepoCase):
             ".gitconfig.local",
             ".env",
             ".env.production",
+            ".pi/agent/mcp-auth.json",
             ".netrc",
             ".aws/credentials",
             "system/etc/default/grub",

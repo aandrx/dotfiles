@@ -21,9 +21,9 @@ are blocking, not suggestions to bypass the scanner.
 ## Privacy requirements
 
 1. Never open, print, copy, stage, or commit credential stores, private keys,
-   cookies, provider model/auth files, sessions, logs, private plans, Wi-Fi
-   profiles, or local environment files. Filename/permission metadata is enough
-   to establish that an excluded file exists.
+   cookies, provider model/auth files, MCP auth stores, sessions, logs, private
+   plans, Wi-Fi profiles, or local environment files. Filename/permission
+   metadata is enough to establish that an excluded file exists.
 2. Keep names, personal emails, SSIDs/BSSIDs, internal addresses, SSH aliases,
    device identifiers, boot UUIDs, and private project notes machine-local.
    Use environment variables, application-supported home expansion, or clearly
