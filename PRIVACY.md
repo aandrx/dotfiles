@@ -10,9 +10,9 @@ This is not a backup of a home directory or an operating-system image.
 
 ## What stays local
 
-- Provider authentication, model credential configuration, API keys, registry
-  tokens, passwords, private keys, SSH configuration, cookies, and certificates
-  containing private material.
+- Provider authentication, model credential configuration, MCP auth stores,
+  API keys, registry tokens, passwords, private keys, SSH configuration,
+  cookies, and certificates containing private material.
 - Pi sessions, cached responses, spill, checkpoints, trust decisions, backups,
   installed runtimes, and dependency directories.
 - Wi-Fi names/profiles, host aliases, internal service addresses, device IDs,

@@ -97,6 +97,7 @@ DENIED_EXACT = {
     ".docker/config.json",
     ".kube/config",
     ".pi/agent/auth.json",
+    ".pi/agent/mcp-auth.json",
     ".pi/agent/models.json",
     ".pi/agent/models-store.json",
     ".pi/agent/trust.json",
