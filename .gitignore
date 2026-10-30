@@ -50,9 +50,6 @@ cookies/
 .pi/agent/wifi-*.md
 .pi/agent/skills/frontend-design/
 
-# Machine-specific boot identity; system/etc/default/grub.example is the public template.
-system/etc/default/grub
-
 # Backups, archives, and runtime state.
 *.bak
 *.backup

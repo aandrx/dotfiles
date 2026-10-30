@@ -7,8 +7,6 @@ are blocking, not suggestions to bypass the scanner.
 ## Structure and ownership
 
 - `.config/`, `.pi/`, `bin/`, and root shell files mirror the user's home.
-- `system/` mirrors `/`. Installing it is a separate, privileged operation;
-  bootloader and hardware configuration are examples, not portable defaults.
 - `scripts/`, `.github/`, `.githooks/`, and root documentation are repo-only.
 - `*.example` files are documentation; do not deploy or capture them.
 - `.pi/agent/packages/` contains maintained local packages, including patched
@@ -71,9 +69,9 @@ are blocking, not suggestions to bypass the scanner.
   gitleaks git --redact --log-opts=--all .
   ```
 
-- Exercise installers only in a temporary HOME, with `--no-deps`, and a
-  temporary system root. Dry-run must leave both untouched. Never test against
-  the real `/etc`, bootloader, or credential stores.
+- Exercise installers only in a temporary HOME, with `--no-deps`. Dry-run
+  must leave it untouched. Never test against the real home or credential
+  stores.
 - Commit, push, live deployment, root changes, history rewriting, and changing
   repository visibility are separate actions. Obtain authorization for the
   applicable action; cleanup alone is not permission to publish.

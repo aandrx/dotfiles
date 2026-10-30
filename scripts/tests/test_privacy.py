@@ -12,7 +12,6 @@ SCRIPTS = (
     "privacy-check.py",
     "capture.sh",
     "install.sh",
-    "install-system.sh",
     "check-pi-extension-imports.sh",
 )
 
@@ -747,65 +746,6 @@ class InstallTests(RepoCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertTrue(marker.exists())
         self.assertIn("npm install failed", result.stderr)
-
-
-class SystemInstallTests(RepoCase):
-    def test_dry_run_does_not_create_root(self) -> None:
-        self.write("system/etc/tool.conf", "value=1\n")
-        self.commit_tracked("system/etc/tool.conf")
-        root = Path(self._tmp.name) / "root"
-        result = self.run_script("install-system.sh", "--root", str(root))
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertFalse(root.exists())
-        self.assertIn("would be installed", result.stdout)
-
-    def test_apply_to_isolated_root_backs_up_and_preserves_mode(self) -> None:
-        self.write("system/etc/tool.conf", "new=1\n")
-        self.write("system/etc/default/grub", "GRUB_CMDLINE_LINUX='private'\n")
-        self.write("system/etc/template.conf.example", "example=1\n")
-        self.write("system/usr/local/sbin/tool", "#!/bin/sh\n", mode=0o755)
-        self.commit_tracked(
-            "system/etc/tool.conf",
-            "system/etc/default/grub",
-            "system/etc/template.conf.example",
-            "system/usr/local/sbin/tool",
-        )
-        root = Path(self._tmp.name) / "root"
-        dest = root / "etc/tool.conf"
-        dest.parent.mkdir(parents=True)
-        dest.write_text("old=1\n", encoding="utf-8")
-        dest.chmod(0o640)
-
-        result = self.run_script("install-system.sh", "--apply", "--root", str(root))
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(dest.read_text(), "new=1\n")
-        self.assertEqual(stat.S_IMODE(dest.stat().st_mode), 0o640)
-        self.assertEqual(
-            stat.S_IMODE((root / "usr/local/sbin/tool").stat().st_mode), 0o755
-        )
-        self.assertFalse((root / "etc/template.conf.example").exists())
-        self.assertFalse((root / "etc/default/grub").exists())
-        backup_root = next((root / "var/backups/dotfiles-system").iterdir())
-        self.assertEqual(stat.S_IMODE(backup_root.stat().st_mode), 0o700)
-        self.assertEqual((backup_root / "etc/tool.conf").read_text(), "old=1\n")
-
-        before = len(list((root / "var/backups/dotfiles-system").iterdir()))
-        result = self.run_script("install-system.sh", "--apply", "--root", str(root))
-        self.assertEqual(result.returncode, 0, result.stderr)
-        after = len(list((root / "var/backups/dotfiles-system").iterdir()))
-        self.assertEqual(before, after)
-
-    def test_symlinked_target_ancestor_is_refused(self) -> None:
-        self.write("system/etc/tool.conf", "new=1\n")
-        self.commit_tracked("system/etc/tool.conf")
-        root = Path(self._tmp.name) / "root"
-        outside = Path(self._tmp.name) / "outside"
-        root.mkdir()
-        outside.mkdir()
-        (root / "etc").symlink_to(outside)
-        result = self.run_script("install-system.sh", "--apply", "--root", str(root))
-        self.assertNotEqual(result.returncode, 0)
-        self.assertFalse((outside / "tool.conf").exists())
 
 
 class PiCheckTests(RepoCase):

@@ -1,4 +1,4 @@
-"""Edge-case regressions for install, install-system and capture safety."""
+"""Edge-case regressions for install and capture safety."""
 
 import os
 import shutil
@@ -9,7 +9,7 @@ import unittest
 from pathlib import Path
 
 REPO_SOURCE = Path(__file__).resolve().parents[2]
-SCRIPTS = ("privacy-check.py", "capture.sh", "install.sh", "install-system.sh")
+SCRIPTS = ("privacy-check.py", "capture.sh", "install.sh")
 COMMANDS = (
     "bash",
     "basename",
@@ -288,90 +288,6 @@ class InstallEdgeTests(RepoCase):
         result = self.run_script("install.sh", "--no-deps")
         self.assertNotEqual(result.returncode, 0)
         self.assertFalse((outside / "app/a.conf").exists())
-
-
-class SystemInstallEdgeTests(RepoCase):
-    def test_same_content_wrong_script_mode_is_corrected(self) -> None:
-        self.write("system/usr/local/sbin/tool", "#!/bin/sh\n", mode=0o755)
-        self.commit_tracked("system/usr/local/sbin/tool")
-        root = self.base / "root"
-        dest = root / "usr/local/sbin/tool"
-        dest.parent.mkdir(parents=True)
-        dest.write_text("#!/bin/sh\n", encoding="utf-8")
-        dest.chmod(0o644)
-        result = self.run_script("install-system.sh", "--apply", "--root", str(root))
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(stat.S_IMODE(dest.stat().st_mode), 0o755)
-        backups = root / "var/backups/dotfiles-system"
-        self.assertFalse(backups.exists() and any(backups.iterdir()))
-
-    def test_backup_ancestor_symlink_is_refused_without_writes(self) -> None:
-        self.write("system/etc/tool.conf", "new=1\n")
-        self.commit_tracked("system/etc/tool.conf")
-        root = self.base / "root"
-        dest = root / "etc/tool.conf"
-        dest.parent.mkdir(parents=True)
-        dest.write_text("old=1\n", encoding="utf-8")
-        outside = self.base / "outside"
-        outside.mkdir()
-        (root / "var").mkdir()
-        (root / "var/backups").symlink_to(outside)
-        result = self.run_script("install-system.sh", "--apply", "--root", str(root))
-        self.assertNotEqual(result.returncode, 0)
-        self.assertEqual(dest.read_text(), "old=1\n")
-        self.assertEqual(list(outside.iterdir()), [])
-
-    def test_root_symlink_is_refused(self) -> None:
-        self.write("system/etc/tool.conf", "new=1\n")
-        self.commit_tracked("system/etc/tool.conf")
-        outside = self.base / "outside"
-        outside.mkdir()
-        root = self.base / "root"
-        root.symlink_to(outside)
-        result = self.run_script("install-system.sh", "--apply", "--root", str(root))
-        self.assertNotEqual(result.returncode, 0)
-        self.assertFalse((outside / "etc/tool.conf").exists())
-
-    def test_backup_base_symlink_is_refused_without_writes(self) -> None:
-        self.write("system/etc/tool.conf", "new=1\n")
-        self.commit_tracked("system/etc/tool.conf")
-        root = self.base / "root"
-        dest = root / "etc/tool.conf"
-        dest.parent.mkdir(parents=True)
-        dest.write_text("old=1\n", encoding="utf-8")
-        outside = self.base / "outside-backup"
-        outside.mkdir()
-        (root / "var/backups").mkdir(parents=True)
-        (root / "var/backups/dotfiles-system").symlink_to(outside)
-        result = self.run_script("install-system.sh", "--apply", "--root", str(root))
-        self.assertNotEqual(result.returncode, 0)
-        self.assertEqual(dest.read_text(), "old=1\n")
-        self.assertEqual(list(outside.iterdir()), [])
-
-    def test_tracked_symlink_source_is_refused(self) -> None:
-        self.write("system/etc/tool.conf", "new=1\n")
-        self.commit_tracked("system/etc/tool.conf")
-        self.write("notes.local", "ignored local note\n")
-        (self.repo / "system/etc/link.conf").symlink_to("../../notes.local")
-        self.commit_tracked("system/etc/link.conf")
-        root = self.base / "root"
-        result = self.run_script("install-system.sh", "--apply", "--root", str(root))
-        self.assertNotEqual(result.returncode, 0)
-        self.assertFalse((root / "etc/link.conf").exists())
-        self.assertFalse((root / "etc/tool.conf").exists())
-
-    def test_source_ancestor_symlink_is_refused_before_writes(self) -> None:
-        self.write("system/etc/tool.conf", "new=1\n")
-        self.commit_tracked("system/etc/tool.conf")
-        outside = self.base / "outside-src"
-        outside.mkdir()
-        (outside / "tool.conf").write_text("outside\n", encoding="utf-8")
-        shutil.rmtree(self.repo / "system/etc")
-        (self.repo / "system/etc").symlink_to(outside)
-        root = self.base / "root"
-        result = self.run_script("install-system.sh", "--apply", "--root", str(root))
-        self.assertNotEqual(result.returncode, 0)
-        self.assertFalse((root / "etc/tool.conf").exists())
 
 
 class CaptureEdgeTests(RepoCase):
