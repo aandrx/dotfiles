@@ -17,7 +17,6 @@ or pushed here; see `PRIVACY.md`. Original work is MIT-licensed under
 | `.config/` | Portable application settings; Linux desktop files are OS-gated. |
 | `.pi/agent/` | Pi instructions, roles, extensions, skills, workflows and packages. |
 | `.pi/bin/`, `bin/`, root shell files | Home-directory configuration and utilities. |
-| `system/` | Separately deployed Linux system configuration, mirroring `/`. |
 | `*.example` | Non-deployed examples that require local review/customization. |
 | `scripts/`, `.github/`, `.githooks/`, root docs | Repository-only maintenance and checks. |
 
@@ -122,7 +121,7 @@ npm across every folder indiscriminately.
    `./packages/pi-split-view` entries, not upstream npm replacements.
 
 On Windows, use the Pi PowerShell installer for step 3 and Git Bash for the
-Bash scripts. The Linux desktop and `system/` parts do not apply. Zed on
+Bash scripts. The Linux desktop parts do not apply. Zed on
 Windows reads `%APPDATA%\Zed`, not `~/.config/zed`.
 
 ### Machine-local settings
@@ -159,22 +158,6 @@ source and must remain private.
 
 The public tree intentionally differs from the maintainer's live files. A
 privacy refusal is not a reason to force-add the live copy.
-
-### Optional Linux system configuration
-
-`system/` contains hardware/power/udev examples and an Arch-specific package
-hook. It is **not** required for Pi and is not safe to apply blindly on another
-machine. Review every file against your hardware and distribution.
-
-```sh
-./scripts/install-system.sh --dry-run
-# Only after manual review, explicit authorization, and a recovery plan:
-# sudo ./scripts/install-system.sh --apply
-```
-
-The system installer requires explicit application, backs up differing existing
-files, and skips `*.example`. Bootloader examples are never automatically
-installed or regenerated. Preserve a working boot configuration locally.
 
 ## Updating safely
 

@@ -5,9 +5,8 @@
 # deliberately with `git add`. Credential paths and private machine notes are
 # refused, and every candidate is checked before any file is written.
 #
-# Most tracked paths mirror $HOME. Paths under system/ mirror the filesystem
-# root instead, so system/etc/tlp.conf is captured from /etc/tlp.conf. Files
-# ending in .example are public templates and are never re-imported.
+# Tracked paths mirror $HOME. Files ending in .example are templates and are
+# never re-imported.
 #
 # Usage:
 #   ./scripts/capture.sh                 update tracked files from $HOME
@@ -49,7 +48,7 @@ command -v python3 >/dev/null 2>&1 || {
 
 in_scope() {
   case "$1" in
-    .config/*|.pi/*|bin/*|system/*|.bash_profile|.bashrc|.condarc|.gitconfig|.npmrc|.profile|.zshrc)
+    .config/*|.pi/*|bin/*|.bash_profile|.bashrc|.condarc|.gitconfig|.npmrc|.profile|.zshrc)
       return 0
       ;;
   esac
@@ -91,10 +90,7 @@ changed() {
 }
 
 source_for() {
-  case "$1" in
-    system/*) printf '/%s\n' "${1#system/}" ;;
-    *) printf '%s/%s\n' "$HOME" "$1" ;;
-  esac
+  printf '%s/%s\n' "$HOME" "$1"
 }
 
 mapfile -d '' -t TRACKED < <(git -C "$REPO" ls-files -z)
@@ -187,11 +183,7 @@ for rel in "${PENDING[@]}"; do
   fi
   mkdir -p "$(dirname "$dest")"
   rm -f "$dest"
-  case "$rel" in
-    # System sources are root-owned; -p would try and fail to preserve that.
-    system/*) cp "$src" "$dest" ;;
-    *)        cp -pP "$src" "$dest" ;;
-  esac
+  cp -pP "$src" "$dest"
   printf 'updated %s\n' "$rel"
 done
 
