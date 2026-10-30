@@ -253,6 +253,8 @@ def denied_rule(rel: str) -> str | None:
         return "denied-path"
     if lowered.endswith(".cookie"):
         return "denied-path"
+    if any(part.lower().startswith("mcp-auth") for part in parts):
+        return "denied-path"
     for suffix in DENIED_SUFFIXES:
         if lowered.endswith(suffix):
             return "denied-path"

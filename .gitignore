@@ -1,6 +1,7 @@
 # Never commit credentials or pi runtime state.
 .pi/agent/auth.json
 .pi/agent/mcp-auth.json
+.pi/agent/mcp-auth.*
 .pi/agent/models.json
 .pi/agent/models-store.json
 .pi/agent/trust.json

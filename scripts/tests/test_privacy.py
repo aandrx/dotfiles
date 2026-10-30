@@ -144,6 +144,8 @@ class PrivacyCheckerTests(RepoCase):
             ".env",
             ".env.production",
             ".pi/agent/mcp-auth.json",
+            ".pi/agent/mcp-auth.json.bak",
+            "relocated/config/mcp-auth-2.json",
             ".netrc",
             ".aws/credentials",
             "system/etc/default/grub",
