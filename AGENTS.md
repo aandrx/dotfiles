@@ -76,10 +76,11 @@ are blocking, not suggestions to bypass the scanner.
   repository visibility are separate actions. Obtain authorization for the
   applicable action; cleanup alone is not permission to publish.
 
-## Public release gate
+## Public release state
 
-Cleaning the tip does not clean history. Keep the repository private until
-historical personal metadata, commit author identity, licenses, and all refs
-have been reviewed. Prefer a separately approved sanitized snapshot over
-rewriting the maintainer's private history. Do not claim a clean scanner run
-proves the absence of every possible secret or privacy disclosure.
+The repository is public. The current tip is a reviewed clean snapshot.
+Historical commits and closed PRs still contain the removed machine-level
+system configuration; it is accepted as non-sensitive configuration and is
+not rewritten. Do not force-push or rewrite history without explicit
+approval. Future snapshots and visibility changes must follow PRIVACY.md. A
+clean scanner run is evidence, not proof of privacy.

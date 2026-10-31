@@ -82,6 +82,11 @@ The public distribution is `aandrx/dotfiles`. The separate
 private. Verify remote targets before every push; never use `--mirror` to copy
 refs or import the private repository's objects here.
 
+The repository is currently public. The current tip is a reviewed clean
+snapshot. Historical commits and closed PRs still contain the removed system
+configuration; it is accepted as non-sensitive configuration and is not
+rewritten. Future history changes require explicit approval.
+
 A zero-findings Gitleaks result is evidence about recognizable secrets, not a
 guarantee against every privacy disclosure. Use this release checklist for
 future snapshots and visibility changes as well:
@@ -93,8 +98,8 @@ future snapshots and visibility changes as well:
 - [x] Check that no ignored local notes or runtime files entered the initial export.
 - [ ] Review binaries, license notices, package provenance, issues, releases,
       wiki content, and CI artifacts.
-- [x] Pass the initial 70-test suite and scratch-HOME install without private services or auth.
-- [ ] Configure required privacy checks and available GitHub secret protections.
+- [x] Pass the current 61-test suite and scratch-HOME install without private services or auth.
+- [x] Configure required privacy checks and available GitHub secret protections.
 - [x] Obtain explicit approval for initial publication as `aandrx/dotfiles`.
 
 Do not check these boxes merely because the current working tree is clean.
