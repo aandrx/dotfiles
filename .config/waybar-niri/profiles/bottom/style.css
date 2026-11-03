@@ -47,12 +47,12 @@ window#waybar {
   min-width: 16px;              /* pin geometry: GTK theme .text-button min-width otherwise leaks in */
 }
 
-/* active workspace: underline only */
+/* active workspace: underline only, on the inner edge of a bottom bar */
 #workspaces button.focused {
   background: transparent;
   color: @inverse_surface;
-  border-bottom: 2px solid @primary;
-  padding-bottom: 0;            /* keep underline inside the 26px bar */
+  border-top: 2px solid @primary;
+  padding-top: 0;               /* keep underline inside the 26px bar */
 }
 
 /* Center clock */
@@ -112,7 +112,7 @@ tooltip.background label {
 #workspaces button:hover {
   background: alpha(@on_surface, 0.10);
   color: @on_surface;
-  border-bottom: 2px solid transparent;
+  border-top: 2px solid transparent;
   box-shadow: none;
 }
 
@@ -123,5 +123,5 @@ tooltip.background label {
 #workspaces button.focused:hover {
   background: transparent;
   color: @inverse_surface;
-  border-bottom: 2px solid @primary;
+  border-top: 2px solid @primary;
 }
