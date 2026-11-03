@@ -1,0 +1,127 @@
+@import "colors.css";
+@import "deepseek-peak.css";
+@import "codex-quota.css";
+@import "opencode-go.css";
+
+* {
+	font-family: "JetBrainsMono Nerd Font Propo";
+	font-weight: bold;
+	min-height: 0;
+	font-size: 98%;
+	font-feature-settings: '"zero", "ss01", "ss02", "ss03", "ss04", "ss05", "cv31"';
+}
+
+/* window#waybar { background: transparent; } */
+/* window#waybar { background: rgba(14, 21, 19, 0.85); } */
+/* window#waybar { background: alpha(@surface_container_highest, 0.85); } */
+/* window#waybar { background: color-mix(in srgb, @surface_container 85%, @primary 15%); } */
+/* window#waybar { background: @surface_container; } */
+window#waybar {
+  background: alpha(@surface_container, 0.70);
+  color: @inverse_surface;
+}
+
+/* Keep containers flat and tight */
+#workspaces, #battery, #pulseaudio, #clock {
+  margin: 0;                    /* no vertical margins */
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* workspace strip */
+#workspaces {
+  padding: 0 4px;
+}
+
+/* workspace buttons */
+#workspaces button {
+  font-size: 12px;
+  color: @on_surface_variant;
+  background: transparent;
+  border: none;
+  padding: 0 6px;               /* no vertical padding */
+  margin: 0 6px 0 0;
+  border-radius: 0;
+  box-shadow: none;
+  min-height: 0;                /* critical */
+  min-width: 16px;              /* pin geometry: GTK theme .text-button min-width otherwise leaks in */
+}
+
+/* active workspace: underline only */
+#workspaces button.focused {
+  background: transparent;
+  color: @inverse_surface;
+  border-bottom: 2px solid @primary;
+  padding-bottom: 0;            /* keep underline inside the 26px bar */
+}
+
+/* Center clock */
+#clock {
+  font-weight: bold;
+  font-size: 13px;
+  padding: 0 8px;
+}
+
+/* Right module spacing — replaces the group margin hack */
+#memory, #pulseaudio, #network, #battery, #custom-swaync {
+  padding: 0 1px;
+  margin: 0 3px;
+}
+
+/* Battery warning/critical states */
+#battery.warning { color: @tertiary; }
+#battery.critical { color: @error; }
+
+/* Memory warning/critical states */
+#memory.warning { color: @tertiary; }
+#memory.critical { color: @error; }
+
+/* Small separator between the two quota readouts */
+#custom-quota-sep {
+  color: @outline;
+  padding: 0 6px;
+  margin: 0;
+}
+
+/* Notification bell */
+#custom-swaync {
+  padding: 0 8px;
+}
+
+/* ------------------------------------------------------------------
+ * Tooltips
+ * Waybar tooltips are GtkWindow.background.tooltip. GTK loads
+ * ~/.config/gtk-3.0/gtk.css (matugen, light mode) over the theme, and its
+ * `window, .background` rule repaints every tooltip near-white with dark
+ * text. Pin the palette here with a more specific selector so waybar stays
+ * dark regardless of what the GTK theme does.
+ * ------------------------------------------------------------------ */
+tooltip.background {
+  background-color: rgba(14, 21, 19, 0.95);
+  color: @on_surface;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+tooltip.background label {
+  color: @on_surface;
+}
+
+/* Workspace hover: the GTK theme's button:hover would paint these white. */
+#workspaces button:hover {
+  background: alpha(@on_surface, 0.10);
+  color: @on_surface;
+  border-bottom: 2px solid transparent;
+  box-shadow: none;
+}
+
+#workspaces button:active {
+  background: alpha(@on_surface, 0.16);
+}
+
+#workspaces button.focused:hover {
+  background: transparent;
+  color: @inverse_surface;
+  border-bottom: 2px solid @primary;
+}
