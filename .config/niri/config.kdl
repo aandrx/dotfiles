@@ -60,7 +60,7 @@ layout {
     // overview, drawn inside the backdrop) shows through, so windows appear to
     // slide over one unified background instead of per-workspace copies.
     background-color "transparent"
-    gaps 12
+    gaps 10
 
     center-focused-column "never"
 
@@ -130,7 +130,7 @@ overview {
 // so windows slide over one unified master wallpaper with no per-workspace seams.
 spawn-at-startup "awww-daemon" "-n" "overview"
 spawn-sh-at-startup "~/.config/niri/restore-wallpaper.sh"
-spawn-sh-at-startup "waybar -c \"$HOME/.config/waybar-niri/config.jsonc\" -s \"$HOME/.config/waybar-niri/style.css\""
+spawn-sh-at-startup "\"$HOME/bin/waybar-start\""
 // swaync is owned by the systemd user unit swaync.service (Type=dbus on
 // org.freedesktop.Notifications, WantedBy=graphical-session.target). Starting it
 // here as well makes the unit fail with start-limit-hit on a duplicate instance.
@@ -212,6 +212,8 @@ binds {
     Super+K { spawn "slack"; }
     Super+S { spawn "spotify"; }
     Super+W { spawn "~/.config/waybar-niri/wppicker-niri.sh"; }
+    // Flip the waybar profile between top (status) and bottom.
+    Super+Shift+W { spawn "sh" "-c" "$HOME/bin/waybar-profile toggle"; }
 
     Super+O { spawn "obsidian"; }
     Super+V { spawn "vesktop"; }

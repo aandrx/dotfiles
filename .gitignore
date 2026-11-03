@@ -83,6 +83,9 @@ dist/
 .config/rofi/current_wallpaper.png
 .config/waybar-niri/current_wallpaper
 
+# Runtime waybar profile pointer, not configuration.
+.config/waybar-niri/current
+
 # Python bytecode.
 __pycache__/
 *.pyc

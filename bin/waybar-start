@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# waybar-start - launch waybar through the active profile.
+#
+# Reload-based profile switching only works when the bar is started with paths
+# that go through the stable `current` symlink. Falls back to the tracked
+# top-level config if the symlink is missing or broken, so a bad profile can
+# never leave the session without a bar.
+set -euo pipefail
+
+DIR="${WAYBAR_PROFILE_DIR:-$HOME/.config/waybar-niri}"
+
+# Refuse to start a second bar on the same compositor socket: two instances
+# fight over the exclusive zone and the second one aborts on reload.
+disp="${WAYLAND_DISPLAY:-}"
+if [ -z "$disp" ] && pgrep -x waybar >/dev/null 2>&1; then
+  printf 'waybar-start: no WAYLAND_DISPLAY; leaving the running bar alone\n' >&2
+  exit 0
+fi
+for pid in $(pgrep -x waybar 2>/dev/null); do
+  [ -n "$disp" ] || break
+  old=$(tr '\0' '\n' <"/proc/$pid/environ" 2>/dev/null | sed -n 's/^WAYLAND_DISPLAY=//p')
+  if [ "$old" = "$disp" ]; then
+    printf 'waybar-start: already running on %s (pid %s)\n' "$disp" "$pid" >&2
+    exit 0
+  fi
+done
+
+if [ -f "$DIR/current/config.jsonc" ] && [ -f "$DIR/current/style.css" ]; then
+  exec waybar -c "$DIR/current/config.jsonc" -s "$DIR/current/style.css"
+fi
+
+exec waybar -c "$DIR/config.jsonc" -s "$DIR/style.css"
