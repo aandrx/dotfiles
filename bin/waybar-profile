@@ -194,12 +194,14 @@ cmd_status() {
     done
   fi
   local name; name=$(current_name)
-  if [ "$name" != "(none)" ] && [ -f "$(profile_dir "$name")/config.jsonc" ]; then
-    local d; d=$(profile_dir "$name")
+  # Drift only means something for the profile that mirrors the canonical
+  # top-level files; other profiles are expected to differ.
+  if [ "$name" = "status" ] && [ -f "$(profile_dir status)/config.jsonc" ]; then
+    local d; d=$(profile_dir status)
     if cmp -s "$d/config.jsonc" "$CONFIG_REF" && cmp -s "$d/style.css" "$STYLE_REF"; then
-      say "drift:     none (profile matches $DIR top-level files)"
+      say "drift:     none (status profile matches $DIR top-level files)"
     else
-      say "drift:     profile differs from top-level config.jsonc/style.css"
+      say "drift:     status profile differs from top-level config.jsonc/style.css; run: waybar-profile sync status"
     fi
   fi
   if [ -s "$STATE/previous" ]; then say "previous:  $(cat "$STATE/previous")"; fi
