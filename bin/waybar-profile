@@ -257,6 +257,14 @@ cmd_use() {
     restart_bar
     say "switched to '$name' (bar restarted)"
   fi
+
+  # A switch must leave exactly one bar behind; anything else is a stray.
+  local now
+  now=$(bar_pids | wc -l)
+  if [ "$now" -ne 1 ]; then
+    err "expected exactly one waybar after the switch, found $now; run: waybar-profile clean"
+    return 1
+  fi
 }
 
 restart_bar() {
@@ -317,6 +325,90 @@ start_bar() {
   return 1
 }
 
+cmd_toggle() {
+  local cur other="" n d
+  cur=$(current_name)
+  for d in "$PROFILES"/*/; do
+    [ -d "$d" ] || continue
+    n=$(basename "$d")
+    [ "$n" = "$cur" ] && continue
+    [ -z "$other" ] && other="$n"
+  done
+  [ -n "$other" ] || { err "no other profile to switch to"; return 1; }
+  cmd_use "$other" "$@"
+}
+
+# Reports stray state and, with --kill, stops duplicate bars and orphaned
+# swaync subscribe listeners. Defunct processes cannot be killed: they are
+# already dead and only their parent can reap them.
+cmd_clean() {
+  local kill=0
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --kill) kill=1 ;;
+      *) err "unknown option: $1"; return 2 ;;
+    esac
+    shift
+  done
+
+  say "defunct processes: $(ps -eo stat | awk '$1 ~ /^Z/' | wc -l) (already dead; reaped by their parent)"
+
+  local pids count pid keeper=""
+  pids=$(bar_pids)
+  if [ -z "$pids" ]; then
+    say "waybar: none running"
+    return 0
+  fi
+  count=$(printf '%s\n' "$pids" | wc -l)
+  for pid in $pids; do
+    if on_stable_paths "$pid"; then
+      say "waybar pid $pid (launched via current/)"
+      keeper="$pid"
+    else
+      say "waybar pid $pid (direct paths)"
+    fi
+  done
+
+  if [ "$count" -gt 1 ]; then
+    if [ -z "$keeper" ]; then
+      err "no instance is using current/; refusing to guess which to keep"
+      return 1
+    fi
+    if [ $kill -eq 0 ]; then
+      say "duplicates found; re-run with --kill to stop everything but pid $keeper"
+    else
+      for pid in $pids; do
+        [ "$pid" = "$keeper" ] && continue
+        kill -TERM "$pid" 2>/dev/null || true
+      done
+      local i=0
+      while [ $i -lt 30 ] && [ "$(bar_pids | wc -l)" -gt 1 ]; do
+        i=$((i + 1)); sleep 0.1
+      done
+      say "waybar instances now: $(bar_pids | wc -l)"
+    fi
+  fi
+
+  local bar_list ppid cmd
+  bar_list=$(bar_pids | tr '\n' ' ')
+  for pid in $(pgrep -x swaync-client 2>/dev/null); do
+    ppid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')
+    case " $bar_list " in
+      *" $ppid "*) continue ;;
+    esac
+    cmd=$(tr '\0' ' ' <"/proc/$pid/cmdline" 2>/dev/null || true)
+    case "$cmd" in
+      *-swb*)
+        say "orphan listener: pid $pid (parent $ppid)$([ $kill -eq 1 ] && echo ' - stopping' || echo '') "
+        [ $kill -eq 1 ] && kill -TERM "$pid" 2>/dev/null || true
+        ;;
+    esac
+  done
+
+  [ $kill -eq 0 ] && say "report only; pass --kill to stop duplicates and orphan listeners"
+  return 0
+}
+
 cmd_revert() {
   prune_previous
   [ -s "$STATE/previous" ] || { err "no previous profile recorded"; return 1; }
@@ -338,6 +430,8 @@ case "${1:-}" in
   validate) shift; validate_profile "${1:?usage: validate <name>}" ;;
   use)     shift; cmd_use "$@" ;;
   revert)  shift; cmd_revert "$@" ;;
+  toggle)  shift; cmd_toggle "$@" ;;
+  clean)   shift; cmd_clean "$@" ;;
   sync)    shift; cmd_sync "$@" ;;
   start)   start_bar ;;
   restart) restart_bar ;;
@@ -351,6 +445,8 @@ usage: waybar-profile <command>
   validate <name>      check JSONC, module names and @imports
   use <name>           switch (reload when possible, else needs --restart)
   revert               switch back to the previous profile
+  toggle               switch to the other profile (two-profile setup)
+  clean [--kill]       report stray bars/listeners; --kill stops them
   sync [status]        copy top-level config.jsonc/style.css into a profile
   start | stop         start or stop the bar through current/
 USAGE
