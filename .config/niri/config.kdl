@@ -212,6 +212,8 @@ binds {
     Super+K { spawn "slack"; }
     Super+S { spawn "spotify"; }
     Super+W { spawn "~/.config/waybar-niri/wppicker-niri.sh"; }
+    // Flip the waybar profile between top (status) and bottom.
+    Super+Shift+W { spawn "sh" "-c" "$HOME/bin/waybar-profile toggle"; }
 
     Super+O { spawn "obsidian"; }
     Super+V { spawn "vesktop"; }
