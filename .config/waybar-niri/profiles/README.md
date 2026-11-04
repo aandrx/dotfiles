@@ -32,17 +32,17 @@ properties are re-applied too on waybar 0.15, so a top/bottom switch is a
 reload, not a restart:
 
 ```sh
-ln -sfn profiles/bottom ~/.config/waybar-niri/current
+ln -sfn profiles/status ~/.config/waybar-niri/current
 kill -USR2 "$(pgrep -x waybar)"
 ```
 
 Adding a profile is a copy, an edit, and a repoint:
 
 ```sh
-cp -a profiles/status profiles/bottom
-$EDITOR profiles/bottom/config.jsonc     # "position": "bottom"
+cp -a profiles/status profiles/compact
+$EDITOR profiles/compact/config.jsonc     # change the module lists, or position
 ```
 
-The top-level `config.jsonc` and `style.css` beside this directory are the
-plain, profile-less setup: what `waybar` reads when it is started without
-arguments.
+The top-level `config.jsonc` and `style.css` beside this directory only include
+`profiles/status`, so the profile is the single copy: everything to read lives
+under `profiles/`.
