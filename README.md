@@ -166,8 +166,10 @@ privacy refusal is not a reason to force-add the live copy.
 
 ## Updating safely
 
-Edit portable settings in this repository, not private copies. Capture only
-reviewed tracked paths when needed:
+Edit the copy you cloned. This snapshot is exported from the maintainer's
+private source, so changes here are yours and do not flow back; the examples are
+reduced on purpose and are expected to need adjustment. Capture only reviewed
+tracked paths:
 
 ```sh
 ./scripts/capture.sh --dry-run .config/kitty/kitty.conf
