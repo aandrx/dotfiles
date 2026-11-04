@@ -17,6 +17,12 @@ are blocking, not suggestions to bypass the scanner.
 - Live files and the public configuration intentionally differ. Do not run an
   install into the maintainer's home, capture all live differences, or change
   live provider settings merely to make them match.
+- `.config/**` and generated Pi files are a reduced, exported snapshot, not a
+  source. Never edit or capture them here, even when repairing a public PR.
+  Mirror the change into the private source, regenerate the snapshot, and
+  replace the PR. A public PR that changes config is closed, not merged.
+  Public-only repository documents and guardrails are the only files authored
+  here.
 
 ## Privacy requirements
 

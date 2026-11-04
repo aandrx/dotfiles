@@ -30,6 +30,13 @@ is a request to separate local data from portable settings, not to force-add it.
 Files kept ignored in a maintainer's checkout must never be included in a public
 archive or deployment. Export from a reviewed Git tree, not `tar` of a checkout.
 
+The public tree is generated and curated, not a complete mirror. Configuration
+paths are exported from the private source; a missing profile, helper, generated
+palette or asset is often deliberate. Do not force-add live or private files to
+make the trees match, and do not merge a public config PR that was not
+generated from the private source. Public-only documents and guardrails are
+authored here; configuration is not.
+
 ## Enforcement
 
 - `.gitignore` prevents common accidental additions. It is not an access-control
