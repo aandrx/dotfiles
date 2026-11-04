@@ -1,10 +1,11 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { readFileSync, writeFileSync, renameSync, existsSync } from "node:fs";
-import { execSync } from "node:child_process";
+import { execSync, spawn } from "node:child_process";
 import { homedir, networkInterfaces } from "node:os";
 import { join } from "node:path";
 
 const TIMEOUT_MS = 1200;
+const CODEX_TIMEOUT_MS = 6000;
 const AUTH_PATH = join(homedir(), ".pi", "agent", "auth.json");
 const CACHE_PATH = join(homedir(), ".pi", "agent", "api-usage.cache");
 
@@ -47,7 +48,98 @@ interface Adapter {
     enabled: boolean;
     /** Local-only adapters skip the auth key requirement and network-interface gate. */
     local?: boolean;
+    /** Adapters that authenticate outside Pi (e.g. a CLI's own login) skip the key lookup. */
+    noAuth?: boolean;
     fetch: (key?: string) => Promise<string | null>;
+}
+
+interface CodexWindow {
+    usedPercent?: number;
+    windowDurationMins?: number;
+    resetsAt?: number;
+}
+
+interface CodexRateLimitsResult {
+    rateLimits?: {
+        primary?: CodexWindow;
+        secondary?: CodexWindow;
+        rateLimitReachedType?: string | null;
+    };
+    rateLimitResetCredits?: { availableCount?: number };
+}
+
+/**
+ * Reads ChatGPT/Codex plan windows from the Codex app-server over stdio: primary is the
+ * 5-hour window, secondary the weekly window. Uses the CLI's own login, so no Pi key.
+ * Starting the app-server costs ~0.6s, all of it off the startup path.
+ */
+function readCodexRateLimits(): Promise<CodexRateLimitsResult | null> {
+    return new Promise((resolve) => {
+        let settled = false;
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        let child: ReturnType<typeof spawn> | undefined;
+
+        const finish = (value: CodexRateLimitsResult | null) => {
+            if (settled) return;
+            settled = true;
+            if (timer) clearTimeout(timer);
+            try {
+                child?.kill("SIGKILL");
+            } catch {
+                // already gone
+            }
+            resolve(value);
+        };
+
+        try {
+            child = spawn("codex", ["app-server", "--listen", "stdio://"], {
+                stdio: ["pipe", "pipe", "ignore"],
+            });
+        } catch {
+            resolve(null);
+            return;
+        }
+
+        timer = setTimeout(() => finish(null), CODEX_TIMEOUT_MS);
+        child.on("error", () => finish(null));
+        child.on("exit", () => finish(null));
+
+        const send = (message: unknown) => {
+            try {
+                child?.stdin?.write(`${JSON.stringify(message)}\n`);
+            } catch {
+                finish(null);
+            }
+        };
+
+        let pending = "";
+        child.stdout?.on("data", (chunk: Buffer) => {
+            pending += chunk.toString("utf8");
+            const lines = pending.split("\n");
+            pending = lines.pop() ?? "";
+            for (const line of lines) {
+                if (!line.trim()) continue;
+                let message: any;
+                try {
+                    message = JSON.parse(line);
+                } catch {
+                    continue;
+                }
+                if (message?.id !== 1) continue;
+                finish(message.result ?? null);
+                return;
+            }
+        });
+
+        send({ jsonrpc: "2.0", id: 0, method: "initialize", params: { clientInfo: { name: "pi", version: "api-usage" } } });
+        send({ jsonrpc: "2.0", method: "initialized", params: {} });
+        send({ jsonrpc: "2.0", id: 1, method: "account/rateLimits/read", params: {} });
+    });
+}
+
+function clampPercent(value: unknown): number | null {
+    if (typeof value !== "number" || !Number.isFinite(value)) return null;
+    return Math.round(Math.min(Math.max(value, 0), 100));
 }
 
 function fmtTokens(n: number): string {
@@ -89,6 +181,49 @@ const ADAPTERS: Record<string, Adapter> = {
             const parts = [`ollama-cloud ${sessionPct}% session · ${weeklyPct}% week`];
             if (cost !== null) parts.push(`$${cost}`);
             return parts.join(" · ");
+        },
+    },
+    codex: {
+        enabled: true,
+        noAuth: true,
+        async fetch() {
+            const data = await readCodexRateLimits();
+            const limits = data?.rateLimits;
+            if (!limits) return null;
+
+            const sessionPct = clampPercent(limits.primary?.usedPercent);
+            const weeklyPct = clampPercent(limits.secondary?.usedPercent);
+            if (sessionPct === null && weeklyPct === null) return null;
+
+            const parts: string[] = [];
+            if (sessionPct !== null) parts.push(`${sessionPct}% 5h`);
+            if (weeklyPct !== null) parts.push(`${weeklyPct}% week`);
+            if (limits.rateLimitReachedType) parts.push("limit reached");
+            const resets = data?.rateLimitResetCredits?.availableCount;
+            if (typeof resets === "number" && resets > 0) {
+                parts.push(`${resets} reset${resets === 1 ? "" : "s"}`);
+            }
+            return `codex ${parts.join(" · ")}`;
+        },
+    },
+    "opencode-go": {
+        enabled: true,
+        async fetch(key) {
+            const data = await getJson("https://opencode.ai/zen/go/v1/usage", key);
+            const usage = data?.usage;
+            if (!usage || typeof usage !== "object") return null;
+
+            const parts: string[] = [];
+            for (const [label, window] of [
+                ["5h", usage.rolling],
+                ["week", usage.weekly],
+                ["month", usage.monthly],
+            ] as const) {
+                const pct = clampPercent((window as { percent?: number } | undefined)?.percent);
+                if (pct !== null) parts.push(`${pct}% ${label}`);
+            }
+            if (parts.length === 0) return null;
+            return `opencode-go ${parts.join(" · ")}`;
         },
     },
     omniroute: {
@@ -154,7 +289,7 @@ export default async function (pi: ExtensionAPI) {
                 Object.entries(ADAPTERS).map(async ([provider, adapter]) => {
                     if (!adapter.enabled) return null;
                     const key = auth[provider]?.key;
-                    if (!adapter.local && !key) return null;
+                    if (!adapter.local && !adapter.noAuth && !key) return null;
                     return adapter.fetch(key);
                 })
             );

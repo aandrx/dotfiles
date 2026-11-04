@@ -65,7 +65,7 @@ if [ -f "$ROOT/.pi/agent/settings.json" ]; then
       printf 'ERROR: settings.json references missing local package: %s\n' "$src" >&2
       fail=1
     fi
-  done < <(grep -oE '"\./packages/[^"]*"' "$ROOT/.pi/agent/settings.json" | tr -d '"')
+  done < <(grep -oE '"\./packages/[^"\\]*"' "$ROOT/.pi/agent/settings.json" | tr -d '"')
 fi
 
 if [ "$fail" -ne 0 ]; then

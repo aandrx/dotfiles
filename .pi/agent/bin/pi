@@ -39,4 +39,10 @@ if [ -x "$pi_node_bin/node" ]; then
 fi
 PI_MANAGED_INSTALL_ROOT=$pi_agent_dir/install
 export PI_MANAGED_INSTALL_ROOT
+# Re-apply the api-usage banner section to the active release. Idempotent and
+# cheap; the release directory changes on every update, this launcher does not.
+pi_usage_patch=$pi_agent_dir/bin/pi-banner-usage.mjs
+if [ -f "$pi_usage_patch" ] && command -v node >/dev/null 2>&1; then
+  node "$pi_usage_patch" >/dev/null 2>&1 || true
+fi
 exec "$pi_release_bin" "$@"

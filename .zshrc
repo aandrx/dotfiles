@@ -60,6 +60,9 @@ export GOPATH=$HOME/go
 export PATH="$HOME/.local/bin:$HOME/bin:/usr/local/bin:$PATH"
 export PATH="$PATH:/usr/local/go/bin:$GOPATH/bin"
 export PATH="$HOME/.opencode/bin:$PATH"
+# The managed Pi launcher must win over the stale npm-global copy in ~/.npm-global/bin,
+# which ~/.zshenv prepends ahead of everything else.
+export PATH="$HOME/.pi/agent/bin:$PATH"
 typeset -U PATH
 
 # plugin edit
