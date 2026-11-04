@@ -32,7 +32,7 @@ commercial-terms notice. It is not part of the public distributable tree unless
 redistribution permission is established. A local maintainer may retain an
 ignored copy; installers must not include that copy.
 
-Theme icons, shaders, and other configuration assets may have separate origins.
+Theme icons and other configuration assets may have separate origins.
 Keep existing author notices. This inventory is not a legal opinion or a blanket
 certification of all third-party redistribution rights. Resolving uncertain
 provenance remains part of the public-release checklist in `PRIVACY.md`.
