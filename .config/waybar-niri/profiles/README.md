@@ -7,7 +7,14 @@ profiles/
   status/
     config.jsonc
     style.css
+  bottom/
+    config.jsonc
+    style.css
 ```
+
+`status` is the default loaded by the top-level `config.jsonc`; `bottom` places
+the same modules along the bottom edge. Each is self-contained, so either can
+be launched directly.
 
 Nothing is inherited, so each profile can differ freely: position, height,
 module lists, styling. Shared pieces stay in one place and are reached with a
@@ -43,6 +50,6 @@ cp -a profiles/status profiles/compact
 $EDITOR profiles/compact/config.jsonc     # change the module lists, or position
 ```
 
-The top-level `config.jsonc` and `style.css` beside this directory only include
-`profiles/status`, so the profile is the single copy: everything to read lives
-under `profiles/`.
+The top-level `config.jsonc` and `style.css` beside this directory include
+`profiles/status`, so status is the default. Everything to read lives under
+`profiles/`; launch `profiles/bottom` directly when you want the bottom layout.

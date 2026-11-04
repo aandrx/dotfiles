@@ -2,7 +2,7 @@
 description: Implement a specifically scoped code change and verify it
 tools: read,bash,grep,find,ls,edit,write
 disallowed_tools: dsh_compact
-model: opencode-go/deepseek-v4.1-flash
+model: mistral/deepseek-v4-1-flash-1017
 thinking: low
 prompt_mode: append
 isolated: false

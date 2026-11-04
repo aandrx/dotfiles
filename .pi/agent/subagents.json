@@ -4,5 +4,6 @@
   "disableDefaultAgents": true,
   "fallbackSubagent": "none",
   "strictAgentFiles": true,
-  "workflowsEnabled": true
+  "workflowsEnabled": true,
+  "reportUsage": true
 }
