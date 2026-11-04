@@ -74,6 +74,10 @@ This distribution was exported from reviewed indexed files into an independent
 Git repository. The private source repository, its historical machine notes,
 and its old commit metadata were not cloned or imported. The initial public
 snapshot uses the public GitHub handle and a GitHub noreply email for authorship.
+Promoted commits are ordinary commits: they carry whatever `user.name` and
+`user.email` the committing Git configuration resolves to, and that metadata is
+public once pushed. Check the resolved identity in the checkout before
+committing, rather than assuming a repository-local setting applies.
 Never add the private repository as a history source, merge its branches, or
 push its tags into this repository.
 
@@ -93,6 +97,7 @@ future snapshots and visibility changes as well:
 
 
 - [x] Review the initial snapshot refs and public-handle/noreply commit identity.
+- [ ] Confirm the resolved author identity before each later promotion commit.
 - [x] Choose an explicitly approved clean public snapshot, keeping private history separate.
 - [x] Scan the initial public snapshot and its independent Git history.
 - [x] Check that no ignored local notes or runtime files entered the initial export.
