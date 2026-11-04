@@ -41,7 +41,7 @@ if (testCommand) {
   phase('Verify')
   verify = await agent(
     `Run \`${testCommand}\` and report its result verbatim: exit status, failing test names, and the first error line if it fails. Change nothing.`,
-    { label: 'verify', gate: testCommand, effort: 'low' },
+    { agentType: 'implementer', label: 'verify', gate: testCommand, effort: 'low' },
   )
   if (verify === null) {
     log(`test gate failed: ${testCommand}`)
