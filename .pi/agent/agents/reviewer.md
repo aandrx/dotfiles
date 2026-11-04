@@ -3,7 +3,7 @@ name: reviewer
 description: Independently review requested changes for actionable defects.
 tools: read,bash,grep,find,ls
 disallowed_tools: dsh_compact
-model: opencode-go/deepseek-v4.1-flash
+model: mistral/zai-glm-5-3-flash
 thinking: high
 prompt_mode: append
 isolated: false

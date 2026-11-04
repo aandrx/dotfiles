@@ -9,7 +9,13 @@
     "openai-codex/gpt-5.6-sol",
     "openai-codex/gpt-6-luna",
     "openai-codex/gpt-6-astra",
-    "opencode-go/deepseek-v4.1-flash"
+    "opencode-go/deepseek-v4.1-flash",
+    "mistral/zai-glm-5-3",
+    "mistral/zai-glm-5-3-flash",
+    "mistral/deepseek-v4-1-flash-1017",
+    "mistral-api/zai-glm-5-3",
+    "mistral-api/zai-glm-5-3-flash",
+    "mistral-api/deepseek-v4-1-flash-1017"
   ],
   "packages": [
     {
@@ -25,13 +31,20 @@
     "npm:pi-checkpoints",
     "./packages/pi-context-bar",
     "npm:pi-polish",
-    "npm:pi-next-prompt"
+    "npm:pi-next-prompt",
+    "git:github.com/5omeOtherGuy/pi-mistral-subscription@v0.2.0"
   ],
   "defaultProvider": "opencode-go",
   "hideThinkingBlock": true,
   "defaultThinkingLevel": "low",
   "modelThinkingLevels": {
-    "nvidia/z-ai/glm-5.3-flash": "high"
+    "nvidia/z-ai/glm-5.3-flash": "high",
+    "mistral/zai-glm-5-3": "high",
+    "mistral/zai-glm-5-3-flash": "high",
+    "mistral/deepseek-v4-1-flash-1017": "high",
+    "mistral-api/zai-glm-5-3": "high",
+    "mistral-api/zai-glm-5-3-flash": "high",
+    "mistral-api/deepseek-v4-1-flash-1017": "high"
   },
   "quietStartup": false,
   "enableSkillCommands": true,
