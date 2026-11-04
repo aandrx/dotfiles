@@ -41,8 +41,10 @@ mainbox {
 
 imagebox {
     padding:                     20px;
-    background-color:            transparent;
-    background-image:            url("~/.config/rofi/current_wallpaper.png", height);
+    background-color:            @surface-container;
+    /* The author's setup symlinks the current wallpaper here:
+     * background-image:         url("~/.config/rofi/current_wallpaper.png", height);
+     */
     orientation:                 vertical;
     children:                    [ "inputbar", "dummy", "mode-switcher" ];
 }
