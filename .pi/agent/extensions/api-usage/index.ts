@@ -1,11 +1,12 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { readFileSync, writeFileSync, renameSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, renameSync, existsSync, readdirSync } from "node:fs";
 import { execSync, spawn } from "node:child_process";
 import { homedir, networkInterfaces } from "node:os";
 import { join } from "node:path";
 
 const TIMEOUT_MS = 1200;
 const CODEX_TIMEOUT_MS = 6000;
+const MISTRAL_TIMEOUT_MS = 4000;
 const AUTH_PATH = join(homedir(), ".pi", "agent", "auth.json");
 const CACHE_PATH = join(homedir(), ".pi", "agent", "api-usage.cache");
 
@@ -25,6 +26,75 @@ function writeCache(text: string) {
     } catch (e) {
         // fail silently on cache write
     }
+}
+
+async function getText(url: string, headers: Record<string, string>) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), MISTRAL_TIMEOUT_MS);
+    try {
+        const res = await fetch(url, { headers, signal: ctrl.signal, redirect: "follow" });
+        if (!res.ok) return null;
+        return { text: await res.text(), finalUrl: res.url };
+    } catch {
+        return null;
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+/** Firefox profile directory that owns a cookies database, or null. */
+function firefoxProfile(): string | null {
+    const root = join(homedir(), ".mozilla", "firefox");
+    const profiles: string[] = [];
+    try {
+        const ini = readFileSync(join(root, "profiles.ini"), "utf8");
+        for (const match of ini.matchAll(/^Path=(.+)$/gm)) profiles.push(match[1].trim());
+    } catch {
+        // fall back to a directory scan
+    }
+    try {
+        for (const entry of readdirSync(root)) profiles.push(entry);
+    } catch {
+        // no Firefox install
+    }
+    for (const profile of profiles) {
+        const dir = join(root, profile);
+        if (existsSync(join(dir, "cookies.sqlite"))) return dir;
+    }
+    return null;
+}
+
+/**
+ * Mistral exposes no usage API below Enterprise, so the admin panel's own
+ * session is used: the ory_session and csrf cookies from the browser. Override
+ * with MISTRAL_COOKIE (a full Cookie header) when Firefox is not the browser.
+ */
+function mistralCookieHeader(): string | null {
+    const manual = process.env.MISTRAL_COOKIE?.trim();
+    if (manual) return manual;
+
+    const profile = firefoxProfile();
+    if (!profile) return null;
+    const db = join(profile, "cookies.sqlite");
+    try {
+        const out = execSync(
+            `sqlite3 "file:${db}?immutable=1" "select name || '=' || value from moz_cookies where host = '.mistral.ai' and (name like 'ory_session%' or name like 'csrf_token%') order by lastAccessed desc;"`,
+            { encoding: "utf8", timeout: 1500 },
+        ).trim();
+        const pairs = out.split("\n").filter((line) => line.includes("="));
+        return pairs.length > 0 ? pairs.join("; ") : null;
+    } catch {
+        return null;
+    }
+}
+
+/** Reads "Included <label> usage ... $used $total" from the subscription page. */
+function parseAllowance(text: string, label: string) {
+    const index = text.indexOf(label);
+    if (index === -1) return null;
+    const match = text.slice(index, index + 400).match(/\$([\d,]+(?:\.\d+)?)\s*\$([\d,]+(?:\.\d+)?)/);
+    if (!match) return null;
+    return { used: match[1], total: match[2] };
 }
 
 async function getJson(url: string, key: string) {
@@ -224,6 +294,31 @@ const ADAPTERS: Record<string, Adapter> = {
             }
             if (parts.length === 0) return null;
             return `opencode-go ${parts.join(" · ")}`;
+        },
+    },
+    mistral: {
+        enabled: true,
+        noAuth: true,
+        async fetch() {
+            const cookie = mistralCookieHeader();
+            if (!cookie) return null;
+
+            const page = await getText("https://admin.mistral.ai/subscription", {
+                Cookie: cookie,
+                "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130 Safari/537.36",
+                Accept: "text/html",
+            });
+            if (!page || !page.finalUrl.startsWith("https://admin.mistral.ai/")) return null;
+
+            const text = page.text.replace(/<[^>]+>/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ");
+            const api = parseAllowance(text, "Included API usage");
+            const vibe = parseAllowance(text, "Included Vibe Code usage");
+            if (!api && !vibe) return null;
+
+            const parts: string[] = [];
+            if (api) parts.push(`$${api.used}/$${api.total} api`);
+            if (vibe) parts.push(`$${vibe.used}/$${vibe.total} vibe`);
+            return `mistral ${parts.join(" · ")}`;
         },
     },
     omniroute: {

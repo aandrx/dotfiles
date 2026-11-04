@@ -1,0 +1,31 @@
+/* ==========================================================================
+   OpenCode Go usage indicator  (module: custom/opencode-go)
+   --------------------------------------------------------------------------
+   Self-contained add-on. To uninstall completely:
+     1. delete this file, opencode-go.py, opencode-go-click.sh
+     2. remove the @import "opencode-go.css" line in style.css
+     3. remove "custom/opencode-go" from modules-right in config.jsonc
+     4. remove the "custom/opencode-go" block in config.jsonc
+   ========================================================================== */
+
+@define-color go_warn #f2b8a2;
+@define-color go_crit #ffb4ab;
+
+#custom-opencode-go {
+  padding: 0 1px;
+  margin: 0 3px;
+}
+
+#custom-opencode-go.ok          { color: @primary; }
+#custom-opencode-go.warn        { color: @go_warn; }
+#custom-opencode-go.crit,
+#custom-opencode-go.max         { color: @go_crit; }
+#custom-opencode-go.stale,
+#custom-opencode-go.unavailable { color: @outline; }
+
+#custom-opencode-go:hover {
+  background: transparent;
+  background-image: none;
+  border-color: transparent;
+  box-shadow: none;
+}
