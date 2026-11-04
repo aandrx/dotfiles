@@ -1,8 +1,8 @@
 @define-color text            @inverse_surface;
 @define-color background-alt  @background;
-@define-color selected        @on_secondary;
-@define-color hover           @on_secondary_fixed_variant;
-@define-color urgent          @on_secondary_fixed;
+@define-color selected        @primary;
+@define-color hover           @outline;
+@define-color urgent          @error;
 
 * {
 
