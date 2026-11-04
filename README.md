@@ -24,6 +24,11 @@ The home layout mirrors `~`; it does **not** mean that everything in `~` belongs
 in Git. Installers consume the tracked manifest, not every file physically in
 the checkout. Ignored local notes and dependencies are not distributable input.
 
+Application configs under `.config/` are illustrative examples, trimmed for
+reading and for copying the parts you want. They are not a drop-in deployment of
+the author's desktop: window managers, bars and terminals are expected to need
+adjustment for your hardware and taste.
+
 ## Pi customization
 
 The repository preserves the local setup, rather than silently reinstalling
