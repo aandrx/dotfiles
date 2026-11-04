@@ -13,8 +13,8 @@ Use the global `pi-subagents` roster in `~/.pi/agent/agents/`. Only these roles 
 |---|---|---|---|
 | `researcher` | `opencode-go/deepseek-v4.1-flash` | off | read, grep, find, ls, web tools |
 | `Plan` | `openai-codex/gpt-6.1-sol` | medium | read, bash, grep, find, ls |
-| `implementer` | `opencode-go/deepseek-v4.1-flash` | low | read, bash, grep, find, ls, edit, write |
-| `reviewer` | `opencode-go/deepseek-v4.1-flash` | high | read, bash, grep, find, ls |
+| `implementer` | `mistral/deepseek-v4-1-flash-1017` | low | read, bash, grep, find, ls, edit, write |
+| `reviewer` | `mistral/zai-glm-5-3-flash` | high | read, bash, grep, find, ls |
 
 Role files are the source of truth for model, thinking, tools, and isolation.
 Change a model only with `/crew model`, never per call. The researcher gets the
@@ -50,6 +50,9 @@ run in the background; do not poll them.
 
 opencode-go is limited to `deepseek-v4.1-flash`, `glm-5.3-flash`, and
 `muse-spark-1.3-contributor`. Do not test or compare other opencode-go models.
+
+Mistral roles run through a subscription sign-in package, so they draw on the
+plan allowance instead of an API key.
 
 ## Delegating to implementer
 
