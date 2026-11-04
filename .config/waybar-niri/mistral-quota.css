@@ -1,0 +1,31 @@
+/* ==========================================================================
+   Mistral Education allowance indicator  (module: custom/mistral-quota)
+   --------------------------------------------------------------------------
+   Self-contained add-on. To uninstall completely:
+     1. delete this file, mistral-quota.py, mistral-quota-click.sh
+     2. remove the @import "mistral-quota.css" line in style.css
+     3. remove "custom/mistral-quota" from modules-right in config.jsonc
+     4. remove the "custom/mistral-quota" block in config.jsonc
+   ========================================================================== */
+
+@define-color mistral_warn #f2b8a2;
+@define-color mistral_crit #ffb4ab;
+
+#custom-mistral-quota {
+  padding: 0 1px;
+  margin: 0 3px;
+}
+
+#custom-mistral-quota.ok          { color: @primary; }
+#custom-mistral-quota.warn        { color: @mistral_warn; }
+#custom-mistral-quota.crit,
+#custom-mistral-quota.max         { color: @mistral_crit; }
+#custom-mistral-quota.stale,
+#custom-mistral-quota.unavailable { color: @outline; }
+
+#custom-mistral-quota:hover {
+  background: transparent;
+  background-image: none;
+  border-color: transparent;
+  box-shadow: none;
+}
