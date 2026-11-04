@@ -1,0 +1,24 @@
+// One layout. `config` (a symlink) points here; add more beside it.
+{
+"include": ["../Modules"],
+
+"layer": "top",
+"position": "top",
+"exclusive": true,
+"ipc": true,
+"margin-top": 4,
+
+"modules-left": [
+	"clock",
+	],
+
+"modules-center": [
+	],
+
+"modules-right": [
+	"tray",
+	"battery",
+	"pulseaudio",
+	"network",
+	],
+}
