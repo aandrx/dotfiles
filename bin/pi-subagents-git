@@ -1,0 +1,12 @@
+#!/bin/sh
+# Git for the local pi-subagents fork.
+#
+# The fork's history lives in a bare repo outside the package so that the
+# dotfiles repositories keep tracking the working tree. A .git inside the
+# package would make git treat it as an embedded repository, and capture
+# would silently stop seeing changes to those files.
+#
+# Usage: pi-subagents-git <git args...>
+set -eu
+exec git --git-dir="${PI_SUBAGENTS_GIT_DIR:-$HOME/.local/share/pi-subagents-fork.git}" \
+	--work-tree="${PI_SUBAGENTS_WORK_TREE:-$HOME/.pi/agent/packages/pi-subagents}" "$@"
