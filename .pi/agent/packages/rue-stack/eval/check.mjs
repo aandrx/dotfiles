@@ -104,6 +104,10 @@ assert(shipp.includes("technical-writing") && momentum.includes("ste"));
 for (const text of [shipp, momentum]) {
   assert(/active mode/i.test(text), "both contracts must require naming the active mode");
 }
+for (const text of [shipp, momentum, quality]) {
+  assert(/report once, when the last one settles/i.test(text), "every contract must batch job results into one synthesis");
+  assert(/next step/i.test(text), "the batch synthesis must name a next step");
+}
 
 assert.equal(contractFor("off"), "");
 assert.notEqual(shipp, momentum);

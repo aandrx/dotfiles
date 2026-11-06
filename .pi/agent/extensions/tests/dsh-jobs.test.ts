@@ -47,7 +47,7 @@ if (isMain) {
     };
     dshJobs(pi);
     const ctx = (id: string) => ({ cwd: process.cwd(), sessionManager: { getSessionId: () => id } });
-    const start = (id: string, command: string) => tools.get("job_start").execute("x", { command, timeoutMs: 5000 }, undefined, undefined, ctx(id));
+    const start = (id: string, command: string, extra: any = {}) => tools.get("job_start").execute("x", { command, timeoutMs: 5000, ...extra }, undefined, undefined, ctx(id));
     const output = (id: string, waitMs = 0, outputLimitBytes?: number) => tools.get("job_output").execute("x", { jobId: id, waitMs, outputLimitBytes }, undefined, undefined, ctx("unused"));
     return { tools, events, sent, ctx, start, output };
   }
@@ -84,7 +84,7 @@ if (isMain) {
     assert.match(result.details.output, /last-err/);
   });
 
-  test("wake cap limits owner completion wakes", async () => {
+  test("wake cap limits successful completion wakes", async () => {
     const { EventEmitter } = await import("node:events");
     const { PassThrough } = await import("node:stream");
     const h = harness();
@@ -98,10 +98,30 @@ if (isMain) {
       return child;
     }) as any);
     try {
-      await h.start("owner", "one");
-      await h.start("owner", "two");
+      await h.start("owner", "one", { notify: "always" });
+      await h.start("owner", "two", { notify: "always" });
       await waitFor(() => (h.tools.get("job_list").execute as any) && h.sent.length === 1);
       await delay(20);
+      assert.equal(h.sent.length, 1);
+    } finally { __setSpawnForTest(); }
+  });
+
+  test("failures bypass the wake cap", async () => {
+    const { EventEmitter } = await import("node:events");
+    const { PassThrough } = await import("node:stream");
+    const h = harness();
+    const ctx = h.ctx("owner") as any;
+    ctx.__jobWakeCap = 0;
+    h.events.get("session_start")!({ reason: "resume" }, ctx);
+    __setSpawnForTest((() => {
+      const child: any = new EventEmitter();
+      child.stdout = new PassThrough(); child.stderr = new PassThrough(); child.unref = () => {};
+      queueMicrotask(() => child.emit("close", 1));
+      return child;
+    }) as any);
+    try {
+      await h.start("owner", "fails");
+      await waitFor(() => h.sent.length === 1);
       assert.equal(h.sent.length, 1);
     } finally { __setSpawnForTest(); }
   });
@@ -120,32 +140,73 @@ if (isMain) {
     assert.match(full.details.output, /ERR-final-/);
   });
 
-  test("completion wakes idle and busy owners as followUp", async () => {
-    for (const busy of [false, true]) {
-      const h = harness();
-      const ctx = h.ctx("owner");
-      h.events.get("session_start")!({ reason: "resume" }, ctx);
-      const job = await h.start("owner", "node -e 'setTimeout(()=>{},30)'");
-      await waitFor(() => h.sent.length === 1);
-      const sent = h.sent[0];
-      assert.deepEqual(sent.options, { triggerTurn: true, deliverAs: "followUp" });
-      assert.equal(sent.message.customType, "dsh-job-complete");
-      assert.ok(busy ? sent.options.deliverAs === "followUp" : sent.options.triggerTurn);
-      assert.ok(job.details.jobId);
-    }
+  test("a failing job wakes with an interrupting, self-describing batch", async () => {
+    const h = harness();
+    h.events.get("session_start")!({ reason: "resume" }, h.ctx("owner"));
+    const job = await h.start("owner", "node -e 'process.exit(3)'", { description: "unit suite" });
+    await waitFor(() => h.sent.length === 1);
+    const sent = h.sent[0];
+    assert.deepEqual(sent.options, { triggerTurn: true, deliverAs: "followUp" });
+    assert.equal(sent.message.customType, "dsh-job-complete");
+    assert.equal(sent.message.display, true);
+    assert.match(sent.message.content, /1 job settled \(failed\)/);
+    assert.match(sent.message.content, /exit=3/);
+    assert.match(sent.message.content, /unit suite/);
+    assert.match(sent.message.content, /Call job_output/);
+    assert.ok(job.details.jobId);
+  });
+
+  test("results are held until the last job settles, then report once", async () => {
+    const h = harness();
+    h.events.get("session_start")!({ reason: "resume" }, h.ctx("owner"));
+    await h.start("owner", "node -e 'setTimeout(()=>process.exit(1),40)'", { description: "slow fail" });
+    await h.start("owner", "node -e 'setTimeout(()=>{},250)'", { description: "slow ok" });
+    await delay(90);
+    assert.equal(h.sent.length, 0, "a settled job must wait while another still runs");
+    await waitFor(() => h.sent.length === 1);
+    await delay(60);
+    assert.equal(h.sent.length, 1, "one batch notice, not one per job");
+    assert.match(h.sent[0].message.content, /slow fail/);
+  });
+
+  test("a successful job stays silent by default", async () => {
+    const h = harness();
+    h.events.get("session_start")!({ reason: "resume" }, h.ctx("owner"));
+    await h.start("owner", "node -e 'process.exit(0)'");
+    await delay(150);
+    assert.equal(h.sent.length, 0);
+  });
+
+  test("notify always queues a successful notice for the next turn", async () => {
+    const h = harness();
+    h.events.get("session_start")!({ reason: "resume" }, h.ctx("owner"));
+    await h.start("owner", "node -e 'process.exit(0)'", { notify: "always" });
+    await waitFor(() => h.sent.length === 1);
+    const sent = h.sent[0];
+    assert.deepEqual(sent.options, { deliverAs: "nextTurn" });
+    assert.equal(sent.message.display, false);
+    assert.match(sent.message.content, /exit=0/);
+  });
+
+  test("notify never sends nothing", async () => {
+    const h = harness();
+    h.events.get("session_start")!({ reason: "resume" }, h.ctx("owner"));
+    await h.start("owner", "node -e 'process.exit(1)'", { notify: "never" });
+    await delay(150);
+    assert.equal(h.sent.length, 0);
   });
 
   test("stale owner is dropped and reading completion suppresses duplicate notice", async () => {
     const h = harness();
     h.events.get("session_start")!({ reason: "resume" }, h.ctx("old"));
-    const stale = await h.start("old", "node -e 'setTimeout(()=>{},80)'");
+    const stale = await h.start("old", "node -e 'setTimeout(()=>process.exit(1),80)'");
     h.events.get("session_start")!({ reason: "resume" }, h.ctx("new"));
     await delay(140);
     assert.equal(h.sent.length, 0);
 
     h.sent.length = 0;
-    const read = await h.start("new", "node -e 'setTimeout(()=>{},50)'");
-    await delay(100);
+    const read = await h.start("new", "node -e 'setTimeout(()=>process.exit(1),50)'");
+    await delay(150);
     await h.output(read.details.jobId);
     assert.equal(h.sent.length, 1);
     assert.ok(stale.details.jobId);
