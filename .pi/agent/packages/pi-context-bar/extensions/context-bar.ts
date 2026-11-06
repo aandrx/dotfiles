@@ -116,7 +116,9 @@ export default function (pi: ExtensionAPI) {
 						theme.fg("muted", "] ") +
 						theme.fg("mdCode", `${fmtTokens(used)}/${fmtTokens(contextWindow)}`) +
 						theme.fg(barColor, ` (${pctUsed.toFixed(0)}%)`);
-					const costSeg = theme.fg("success", `$${cost.toFixed(3)}`);
+					// A local or otherwise free model has no prices, so a cost that's still $0 says nothing
+					const free = !ctx.model?.cost?.input && !ctx.model?.cost?.output;
+					const costSeg = free && cost === 0 ? undefined : theme.fg("success", `$${cost.toFixed(3)}`);
 					// DeepSeek-metric: cache reads over all billed prompt-side tokens.
 					const cacheBase = tokIn + tokCache + tokWrite;
 					const cachePct = cacheBase > 0 ? (tokCache / cacheBase) * 100 : 0;
@@ -134,9 +136,13 @@ export default function (pi: ExtensionAPI) {
 					const modeSeg = theme.fg(modeColor, mode === "off" ? "off" : `● ${mode}`);
 					const taskSeg = taskTotal > 0 ? theme.fg(taskDone === taskTotal ? "success" : "muted", `☑ ${taskDone}/${taskTotal}`) : "";
 
+					// Other extensions' statuses (setStatus) go last, sorted by key and on one line, like in Pi's own footer
+					const statuses = [...footerData.getExtensionStatuses()]
+						.sort(([a], [b]) => a.localeCompare(b))
+						.map(([, text]) => text.replace(/\s+/g, " ").trim())
+						.filter(Boolean);
+
 					const sep = theme.fg("dim", " │ ");
-					const segs = [modeSeg, modelSeg, branchSeg, contextSeg(BAR_WIDTH), costSeg];
-					if (taskSeg) segs.splice(1, 0, taskSeg);
 					const line = (barSize: number) => {
 						const parts = [modeSeg];
 						if (taskSeg) parts.push(taskSeg);
@@ -145,14 +151,22 @@ export default function (pi: ExtensionAPI) {
 						})();
 						const label = liveName || sessionTitle;
 						if (label) parts.push(theme.fg("muted", label));
-						parts.push(modelSeg, branchSeg, contextSeg(barSize), costSeg, perfSeg);
+						parts.push(modelSeg, branchSeg, contextSeg(barSize));
+						if (costSeg) parts.push(costSeg);
+						parts.push(perfSeg);
 						return parts.join(sep);
 					};
 
 					// Shrink the bar before cutting anything off, so the cost stays visible in narrow windows
 					const overflow = visibleWidth(line(BAR_WIDTH)) - width;
 					const barSize = Math.max(MIN_BAR_WIDTH, BAR_WIDTH - Math.max(0, overflow));
-					return [truncateToWidth(line(barSize), width)];
+					// Statuses only show when they fit whole
+					let out = line(barSize);
+					for (const status of statuses) {
+						if (visibleWidth(out + sep + status) > width) break;
+						out += sep + status;
+					}
+					return [truncateToWidth(out, width)];
 				},
 			};
 		});

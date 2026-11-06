@@ -39,15 +39,19 @@
  * flanks; the ScrollView's always-on scrollbar (track styled as border) IS the right frame
  * edge, and MeasurementSafeVStack subclasses make the engine's discarded
  * intrinsic-height measurement passes O(1) instead of eagerly rendering whole
- * subtrees (panels + transcript) every keystroke frame. Bodies render a
- * newest-first row-capped window (~96 rows). Full history stays in the
- * transcript; the band is a recent-history view.
+ * subtrees (panels + transcript) every keystroke frame. The Tool Usage body
+ * renders a newest-first visual-row window (MAX_BODY_ROWS); the Thinking body
+ * renders its whole buffer up to MAX_UNWINDOWED_ROWS, so a panel scrolled away
+ * from the end keeps its position while reasoning streams in (SV-27). Full
+ * history stays in the transcript either way.
  *
  * Panel C trim mode (trimResponse): the transcript region of pi's base root is
  * swapped for an extension-owned ScrollView over a document of user / assistant
  * messages (reused from branch + streamed live via pi's own message
  * components), so rendering matches the native transcript minus tool calls,
- * thinking blocks and extension custom entries. The editor dock
+ * thinking blocks and extension custom entries. pi's startup header and
+ * loaded-resources listing stay mounted above those messages (SV-26). The
+ * editor dock
  * (pending/status/editor/footer) is reused verbatim, so input is untouched.
  *
  * Response-only is native-parity BY DESIGN (SV-09/SV-10/SV-18, USER DECISION
@@ -92,9 +96,13 @@ import {
 import {
 	Container,
 	HStack,
+	Image,
 	ScrollView,
 	Spacer,
 	VStack,
+	getCapabilities,
+	getImageDimensions,
+	imageFallback,
 	type Component,
 	type OverlayHandle,
 	type TuiMouseEvent,
@@ -108,6 +116,7 @@ import {
 	saveUiPanelsConfig,
 	normalizeConfig,
 	type ToolMode as ToolModeCfg,
+	type ThinkingScope,
 } from "./ui-panels-config.ts";
 import {
 	getBaseRoot,
@@ -123,7 +132,11 @@ import {
 	capToolText,
 	dockColsFor as dockColsForManual,
 	formatDuration,
+	lastImageBlock,
+	outputPreview,
 	truncateInline,
+	thoughtsSinceLastUser,
+	type ImageBlock,
 } from "./helpers.ts";
 import { existsSync, statSync } from "node:fs";
 import { homedir } from "node:os";
@@ -143,10 +156,18 @@ const MAX_FILES = 500;
 const MAX_WIDGET_NAMES = 3;
 const MIN_TERM_WIDTH = 90;
 const MAX_TOOL_OUTPUT_LINES = 20;
+/** Lines of an edit's unified diff kept per tool entry (zoomed tools view). */
+const MAX_TOOL_DIFF_LINES = 150;
 // OracleSpec body window: hard cap on FINAL VISUAL rows rendered by band
 // panels (logical lines can wrap into many). Wrapped rows are memoized per
 // line, so only changed lines (the streaming tail) re-wrap on a flush.
 const MAX_BODY_ROWS = 400;
+// SV-27: the thinking panel renders its whole buffer instead of a sliding
+// window, so ITS visual-row bound has to come from here — MAX_LINES counts
+// LOGICAL lines, and one of them can wrap into hundreds of rows. 4x the normal
+// window leaves every realistic turn completely stable while still capping a
+// pathological buffer (beyond it the body falls back to the newest rows).
+const MAX_UNWINDOWED_ROWS = MAX_BODY_ROWS * 4;
 // Hard cap on raw chars per logical line (giant-line guard). ≥ MAX_TAIL_CHARS
 // so the streaming tail is never cut by a sliding (re-flowing) window.
 const MAX_LINE_CHARS = MAX_TAIL_CHARS;
@@ -189,6 +210,11 @@ let termHeight = 0;
 
 // Panel enable flags (kept in sync with config; thinking/tools default true).
 let thinkingOn = true;
+/** SV-27: "turn" = the thinking panel carries the current turn only (the
+ * buffer is cleared on each new user message); "session" = accumulate every
+ * turn (default, the pre-SV-27 behaviour). Session-local;
+ * /split-thinking-scope, persisted by /split-save. */
+let thinkingScope: ThinkingScope = "session";
 let toolsOn = true;
 let filesOn = false;
 /** Files panel edit-diff subpanel (session-local; /split-diff, persisted by
@@ -387,11 +413,15 @@ const thinking = {
 		if (this.current) total += this.current.lines.length;
 		return total;
 	},
-	reset() {
+	/** SV-27: `keepStreaming` preserves the live-stream indicator when the buffer
+	 * is cleared mid-turn (/split-thinking-scope turn while reasoning is still in
+	 * flight); the next thinking_delta rebuilds `current`. */
+	reset(keepStreaming = false) {
 		cancelPendingThinkFlush();
+		const wasStreaming = this.streaming;
 		this.blocks = [];
 		this.current = null;
-		this.streaming = false;
+		this.streaming = keepStreaming && wasStreaming;
 		this.version++;
 	},
 };
@@ -597,6 +627,12 @@ interface ToolEntry {
 	isError: boolean;
 	subagent?: boolean;
 	agent?: string;
+	/** Last image block of the result (e.g. `read` on an image file), so the
+	 * panel can render it inline like pi's transcript does. */
+	image?: ImageBlock;
+	/** Raw unified diff of an `edit` result (details.diff), shown in the
+	 * zoomed tools view; capped to MAX_TOOL_DIFF_LINES. */
+	diff?: string;
 	/** Wall-clock start/end (ms) of LIVE calls; absent for resumed history. */
 	startedAt?: number;
 	endedAt?: number;
@@ -690,16 +726,47 @@ function ingestToolResult(id: string, result: any, isError: boolean, endedAt?: n
 	if (endedAt !== undefined && e.startedAt !== undefined) e.endedAt = endedAt;
 	const text = resultText(result);
 	if (text) setToolOutput(e, text);
+	// Keep the last image block so the tools panel can render it inline on
+	// terminals with image support (pi's transcript does the same via pi-tui's
+	// Image component; resultText drops non-text blocks).
+	const img = lastImageBlock(result?.content);
+	if (img) e.image = img;
+	const diff = result?.details?.diff;
+	if (typeof diff === "string" && diff) {
+		const lines = capToolText(diff).split(/\r?\n/);
+		e.diff = lines.slice(0, MAX_TOOL_DIFF_LINES).join("\n");
+		if (lines.length > MAX_TOOL_DIFF_LINES)
+			e.diff += `\n… +${lines.length - MAX_TOOL_DIFF_LINES} more diff lines`;
+	}
 	e.active = false;
 	e.isError = isError;
 	cancelPendingToolsFlush();
 	toolsVersionCounter++;
 }
 
-function toolLines(theme: Theme, width: number): string[] {
+/** One row-source item of a band panel body: a styled text line, or an
+ * inline image block. Image items render RAW via pi-tui's Image component
+ * (never wrapped, capped or padded) — the same line structure pi's own
+ * transcript feeds its ScrollView, which the TUI engine handles (image-aware
+ * scrollbar, scroll cropping, placement cleanup on full repaints). */
+type BodyItem = string | { image: ImageBlock; maxRows?: number };
+
+/** Band (non-zoomed) tools panel: inline images are thumbnails capped at
+ * this many rows so they don't crowd the small panel. Zoomed: pi's default. */
+const BAND_IMAGE_ROWS = 6;
+
+/** Zoomed tools panel: show full detail for every tool — its whole stored
+ * output (≤ MAX_TOOL_OUTPUT_LINES) instead of the 2-line band preview. */
+const toolOutputCap = (zoomedTools: boolean) =>
+	zoomedTools ? MAX_TOOL_OUTPUT_LINES : 2;
+
+function toolItems(theme: Theme, width: number): BodyItem[] {
 	const th = theme;
-	const out: string[] = [];
-	const full = toolMode === "full";
+	const out: BodyItem[] = [];
+	// Zooming the tools panel expands it over the whole area above the editor,
+	// so it always renders full detail regardless of the compact/full toggle.
+	const zoomedTools = zoomed === "tools";
+	const full = toolMode === "full" || zoomedTools;
 	// Text budget inside the frame: 1 col inset + ≥2 trailing pad cols
 	// (the transient scrollbar paints over the pad, never the frame).
 	const textWidth = Math.max(8, width - 3);
@@ -743,10 +810,26 @@ function toolLines(theme: Theme, width: number): string[] {
 		if (content.length === 0) {
 			if (e.active) out.push(th.fg("dim", "  · …"));
 		} else {
-			for (const l of content.slice(0, 2))
+			const { shown, hidden } = outputPreview(content, toolOutputCap(zoomedTools));
+			for (const l of shown)
 				out.push(th.fg("toolOutput", `  · ${truncateInline(l, textWidth - 4)}`));
-			if (content.length > 2)
-				out.push(th.fg("dim", `  · +${content.length - 2} more`));
+			if (hidden > 0) out.push(th.fg("dim", `  · +${hidden} more`));
+		}
+		// Zoomed: an edit's diff, rendered like pi's transcript (renderDiff
+		// colours +/- lines); long lines wrap in the body.
+		if (zoomedTools && e.diff) {
+			out.push("");
+			for (const l of renderDiff(e.diff).split(/\r?\n/)) out.push(`    ${l}`);
+		}
+		// Inline image result (e.g. read on an image file), like pi's
+		// transcript: a separator row, then the image as a raw item. Without
+		// image support it's a one-line text fallback styled as an output row.
+		if (e.image) {
+			if (getCapabilities().images) out.push("");
+			out.push({
+				image: e.image,
+				maxRows: zoomedTools ? undefined : BAND_IMAGE_ROWS,
+			});
 		}
 	}
 	return out;
@@ -845,6 +928,7 @@ function displayPath(abs: string): string {
 }
 
 function widgetLines(theme: Theme, width: number): string[] {
+	// Local patch: the recent-files widget is suppressed; the files dock still works.
 	return [];
 	const entries = recentEntries();
 	if (entries.length === 0) return [];
@@ -1075,9 +1159,18 @@ function panelMouse(
 	if (drag && (ev.type === "drag" || ev.type === "release")) return continueDrag(ev);
 	if (!ctl) return undefined;
 	if (ev.type === "wheel") {
-		// Body wheel uses native routing (contained in the panel's ScrollView).
-		if (where === "body" || !ctl.scroll) return undefined;
-		ctl.scroll.scrollBy(ev.wheelDelta ?? 0);
+		// SV-28: consume the wheel here instead of deferring the body to pi's
+		// native routing (routeWheel). That path hands whatever the panel's
+		// ScrollView did not consume to the PRIMARY scroll view — the transcript —
+		// even when the panel declares overscroll:"contain" (tui-alt-screen.js:
+		// `remaining !== 0 && !seen.has(primary)` runs regardless). So scrolling a
+		// panel to its top or bottom also scrolled the main window. Returning
+		// `handled` makes the TUI treat the wheel as consumed and skip routeWheel
+		// entirely, keeping the scroll inside this panel. A body with no
+		// ScrollView of its own (the files dock lists without one) consumes it too:
+		// doing nothing is better than scrolling the transcript from under the
+		// cursor.
+		ctl.scroll?.scrollBy(ev.wheelDelta ?? 0);
 		return { handled: true };
 	}
 	if (ev.button !== "left") return undefined;
@@ -1166,6 +1259,13 @@ class MeasurementSafeVStack extends VStack {
  * edge is continuous when content is short. Output is cached on
  * (version, minRows, width); wrapped rows are memoized per source line, so a
  * streaming flush only re-wraps lines that changed (the tail).
+ *
+ * Row sources are BodyItems: text lines go through the wrap/edge/pad path;
+ * image items render raw via a cached pi-tui Image component (atomic group,
+ * no edge/pad — the escape lines must stay contiguous and unsliced, exactly
+ * the structure pi's transcript feeds its ScrollView; the TUI engine is
+ * image-aware: the scrollbar skips image lines, scrolling crops placements,
+ * full repaints clear them).
  */
 class RecentBody implements Component {
 	private cacheVersion = -1;
@@ -1176,15 +1276,23 @@ class RecentBody implements Component {
 	/** Per-line wrap memo for one width; holds only the lines last shown. */
 	private wrapWidth = -1;
 	private wrapMemo = new Map<string, string[]>();
+	/** Image components by (mimeType:data), small LRU. Cached so a re-render
+	 * re-emits the SAME Kitty image ID — a fresh instance per frame would
+	 * allocate a new placement every frame and leak them in the terminal. */
+	private imageCache = new Map<string, Image>();
+	private static readonly MAX_CACHED_IMAGES = 8;
 	constructor(
 		private theme: Theme,
 		private style: (line: string) => string,
-		private lines: (width: number) => string[],
+		private lines: (width: number) => BodyItem[],
 		private version: () => number,
 		private empty: string,
 		/** Rows to guarantee so the left edge has no gaps (viewport height). */
 		private minRows: () => number,
 		private ctl?: PanelCtl,
+		/** SV-27: false = emit every row of the source instead of the newest
+		 * MAX_BODY_ROWS window. See BandDef.windowed. */
+		private windowed = true,
 	) {}
 	render(width: number): string[] {
 		const th = this.theme;
@@ -1214,37 +1322,44 @@ class RecentBody implements Component {
 		// SV-03/SV-04: fragments of ONE source line are wrapped as a group and
 		// inserted in order; the cap counts VISUAL rows. A group that would
 		// straddle the cap is skipped whole; a single group larger than the
-		// whole cap keeps only its newest fragments.
+		// whole cap keeps only its newest fragments — except an image group,
+		// which is atomic (its escape lines must stay contiguous and unsliced)
+		// and therefore kept whole (its height is bounded by the Image
+		// component's maxHeightCells, far below MAX_BODY_ROWS in practice).
 		const src = this.lines(width);
-		const groups: string[][] = [];
+		const groups: { frags: string[]; raw: boolean }[] = [];
 		let used = 0;
+		// SV-27: a non-windowed body walks the source back to its START — no
+		// sliding window, so a panel scrolled away from the end keeps its
+		// position — but it is still bounded by VISUAL rows: MAX_LINES counts
+		// LOGICAL lines and one of them can wrap into hundreds. Past the cap it
+		// degrades to the windowed behaviour rather than rendering without limit.
+		const cap = this.windowed ? MAX_BODY_ROWS : MAX_UNWINDOWED_ROWS;
 		for (let i = src.length - 1; i >= 0; i--) {
-			const raw = src[i];
-			let frags = nextMemo.get(raw) ?? memo.get(raw);
-			if (!frags) {
-				frags = wrapTextWithAnsi(
-					this.style(capDisplayLine(raw, MAX_LINE_CHARS)),
-					Math.max(1, width - 3),
-				).map((w: string) => " " + w);
-			}
-			nextMemo.set(raw, frags);
-			if (used + frags.length > MAX_BODY_ROWS) {
-				if (groups.length === 0 && frags.length > MAX_BODY_ROWS)
-					groups.push(frags.slice(frags.length - MAX_BODY_ROWS));
+			const { frags, raw } = this.itemFrags(src[i], width, memo, nextMemo);
+			if (used + frags.length > cap) {
+				if (groups.length === 0 && frags.length > cap)
+					groups.push({
+						frags: raw ? frags : frags.slice(frags.length - cap),
+						raw,
+					});
 				break;
 			}
-			groups.push(frags);
+			groups.push({ frags, raw });
 			used += frags.length;
 		}
 		this.wrapMemo = nextMemo;
 		const rows: string[] = [];
-		for (let g = groups.length - 1; g >= 0; g--) for (const f of groups[g]) rows.push(f);
+		for (let g = groups.length - 1; g >= 0; g--)
+			for (const f of groups[g].frags)
+				rows.push(groups[g].raw ? f : edge + f + pad(f));
 		let out: string[];
 		if (rows.length === 0) {
 			const empty = " " + th.fg("dim", this.empty);
 			out = [edge + empty + pad(empty)];
 		} else {
-			out = rows.map((r) => edge + r + pad(r));
+			// Rows already carry the edge/pad (text) or are raw (image).
+			out = rows;
 		}
 		const filler = edge + " ".repeat(Math.max(0, width - 1));
 		while (out.length < min) out.push(filler);
@@ -1254,6 +1369,77 @@ class RecentBody implements Component {
 			this.cacheByWidth.delete(oldest);
 		}
 		return out;
+	}
+	/** Fragments for one row-source item: text lines are wrapped (memoized
+	 * per line) and emit with the frame edge; image items go to imageRows.
+	 * `raw` rows bypass the edge/pad pass. */
+	private itemFrags(
+		item: BodyItem,
+		width: number,
+		memo: Map<string, string[]>,
+		nextMemo: Map<string, string[]>,
+	): { frags: string[]; raw: boolean } {
+		if (typeof item !== "string")
+			return this.imageRows(item.image, width, item.maxRows);
+		const memoFrags = nextMemo.get(item) ?? memo.get(item);
+		const frags =
+			memoFrags ??
+			wrapTextWithAnsi(
+				this.style(capDisplayLine(item, MAX_LINE_CHARS)),
+				Math.max(1, width - 3),
+			).map((w: string) => " " + w);
+		nextMemo.set(item, frags);
+		return { frags, raw: false };
+	}
+	/** Render one image item. Terminals with image support get the raw rows
+	 * from a cached pi-tui Image component. Without image support, pi's text
+	 * fallback (imageFallback), as a normal padded text row. */
+	private imageRows(
+		img: ImageBlock,
+		width: number,
+		maxRows?: number,
+	): { frags: string[]; raw: boolean } {
+		const th = this.theme;
+		if (!getCapabilities().images) {
+			const dims = getImageDimensions(img.data, img.mimeType) ?? undefined;
+			// Aligned with the tool's output rows ("  · …").
+			const fb = th.fg("toolOutput", `  · ${imageFallback(img.mimeType, dims)}`);
+			return {
+				frags: wrapTextWithAnsi(
+					capDisplayLine(fb, MAX_LINE_CHARS),
+					Math.max(1, width - 3),
+				).map((w: string) => " " + w),
+				raw: false,
+			};
+		}
+		const key = `${maxRows ?? ""}:${img.mimeType}:${img.data}`;
+		let component = this.imageCache.get(key);
+		if (component) {
+			// LRU touch.
+			this.imageCache.delete(key);
+			this.imageCache.set(key, component);
+		} else {
+			component = new Image(
+				img.data,
+				img.mimeType,
+				{ fallbackColor: (s: string) => th.fg("toolOutput", s) },
+				maxRows ? { maxHeightCells: maxRows } : {},
+			);
+			this.imageCache.set(key, component);
+			while (this.imageCache.size > RecentBody.MAX_CACHED_IMAGES)
+				this.imageCache.delete(this.imageCache.keys().next().value as string);
+		}
+		// Frame edge + 2-col inset before the image. Placement escapes draw at
+		// the cursor column (Kitty C=1, iTerm2 cursor-up keeps the column), so
+		// prefixing shifts the image right; blank reserved rows get the edge
+		// and pad like any text row.
+		const edge = th.fg("border", "│");
+		const inset = edge + "  ";
+		const blank = edge + " ".repeat(Math.max(0, width - 1));
+		const rows = component
+			.render(Math.max(1, width - 4))
+			.map((l: string) => (l ? inset + l : blank));
+		return { frags: rows, raw: true };
 	}
 	handleMouse(ev: TuiMouseEvent): TuiMouseEventResult | undefined {
 		return panelMouse(ev, this.ctl, "body");
@@ -1434,9 +1620,12 @@ interface BandDef {
 	color: "accent" | "muted";
 	streaming: () => boolean;
 	style: (line: string) => string;
-	lines: (width: number) => string[];
+	lines: (width: number) => BodyItem[];
 	version: () => number;
 	empty: string;
+	/** SV-27: false = the body emits its whole row source instead of the newest
+	 * MAX_BODY_ROWS window. Defaults to true (windowed). */
+	windowed?: boolean;
 }
 
 function bandDef(theme: Theme, id: "thinking" | "tools"): BandDef {
@@ -1449,13 +1638,18 @@ function bandDef(theme: Theme, id: "thinking" | "tools"): BandDef {
 				lines: (w) => thinkingLines(theme, w),
 				version: () => thinking.version,
 				empty: "Thinking idle",
+				// SV-27: the thinking buffer is already capped at MAX_LINES, and a
+				// sliding newest-N window makes a fixed scrollTop resolve to
+				// different text on every streaming flush — scroll up and the panel
+				// keeps sliding under you. Emit the whole buffer instead.
+				windowed: false,
 			}
 		: {
 				title: "Tool Usage",
 				color: "muted",
 				streaming: () => toolOrder.some((id) => toolsBy.get(id)?.active),
 				style: (l) => l,
-				lines: (w) => toolLines(theme, w),
+				lines: (w) => toolItems(theme, w),
 				version: toolsVersion,
 				empty: "No tools called yet",
 			};
@@ -1480,6 +1674,7 @@ function framedPanel(theme: Theme, d: BandDef, ctl: PanelCtl): Component {
 		d.empty,
 		() => ctl.scroll?.viewportHeight || bandHeight - 2,
 		ctl,
+		d.windowed ?? true,
 	);
 	const scroll = new ScrollView(body, {
 		follow: "end",
@@ -1630,6 +1825,24 @@ function buildZoom(theme: Theme, id: PanelId): Component | null {
  */
 let responseScrollView: ScrollView | null = null;
 
+/** Container for the trimmed doc (startup containers + response doc), the
+ * child of responseScrollView. Built lazily; holds live references into pi's
+ * base tree, so it stays valid across theme changes and resource reloads. */
+let responseDocHost: Container | null = null;
+
+/** Extract the transcript ScrollView from pi's base root (VStack[transcript,
+ * dock]): the entry with an own `child` property (baseDockOf finds the other
+ * one). */
+function baseTranscriptOf(base: any): Component | null {
+	const entries = base?.entries;
+	if (!Array.isArray(entries)) return null;
+	for (const e of entries) {
+		const c = e?.component;
+		if (c && Object.hasOwn(c, "child")) return c as Component;
+	}
+	return null;
+}
+
 /** Extract the editor dock from pi's base root (VStack[transcript, dock]). */
 function baseDockOf(base: any): Component | null {
 	const entries = base?.entries;
@@ -1644,6 +1857,37 @@ function baseDockOf(base: any): Component | null {
 	return null;
 }
 
+/**
+ * SV-26: build the trimmed panel's document: pi's own startup header and
+ * loaded-resources containers mounted above the response doc. Those two
+ * containers are children[0..1] of the transcript's documentContainer and
+ * hold the startup banner + [Context]/[Skills]/[Prompts]/[Extensions]
+ * listing. Trim mode unmounts the base transcript, which erased them; the
+ * response doc mirrors branch messages only and never contained them.
+ * Mounting the LIVE instances here (not snapshots) keeps ctrl+o header
+ * expansion, theme updates and /reload resource refreshes working, and never
+ * double-mounts: while trim is on the base transcript is unmounted, and when
+ * trim toggles off these containers return with it. Requires exactly the
+ * expected [header, resources, chat] triple; any other shape degrades to the
+ * old response-only doc (never risk mounting chatContainer here).
+ */
+function buildTrimDoc(base: Component): Container {
+	if (!responseDocHost) {
+		responseDocHost = new Container();
+		try {
+			const kids = (baseTranscriptOf(base) as any)?.child?.children;
+			if (Array.isArray(kids) && kids.length === 3) {
+				responseDocHost.addChild(kids[0]);
+				responseDocHost.addChild(kids[1]);
+			}
+		} catch {
+			/* unexpected tree shape — response doc only */
+		}
+		responseDocHost.addChild(responseDoc);
+	}
+	return responseDocHost;
+}
+
 /** Build the trimmed inner: VStack([responseScroll, dock]) like pi's viewport. */
 function buildTrimInner(theme: Theme): Component | null {
 	const base = getBaseRoot();
@@ -1651,7 +1895,7 @@ function buildTrimInner(theme: Theme): Component | null {
 	const dock = baseDockOf(base);
 	if (!dock) return null;
 	if (!responseScrollView) {
-		responseScrollView = new ScrollView(responseDoc, {
+		responseScrollView = new ScrollView(buildTrimDoc(base), {
 			follow: "end",
 			// A1: in trim mode pi's own transcript (primary) is not mounted;
 			// without this the FIRST laid-out ScrollView — the Thinking panel —
@@ -1786,15 +2030,20 @@ export default function (pi: ExtensionAPI) {
 		rebuildResponseDoc(ctx);
 
 		const branch = ctx.sessionManager.getBranch();
-		const thoughts: string[] = [];
+		// SV-27: the "turn" scope has to survive a restart / branch switch, so the
+		// reconstruction makes the same cut the live buffer does. Without this a
+		// resumed session would show every earlier turn until the next user
+		// message happened to clear it.
+		const turns: { isUser: boolean; thoughts: string[] }[] = [];
 		for (const entry of branch) {
 			if (entry.type !== "message") continue;
 			const msg = (entry as any).message;
 			if (!msg) continue;
+			const msgThoughts: string[] = [];
 			if (msg.role === "assistant" && Array.isArray(msg.content)) {
 				for (const c of msg.content) {
 					if (c?.type === "thinking" && typeof c.thinking === "string")
-						thoughts.push(c.thinking);
+						msgThoughts.push(c.thinking);
 					if (c?.type === "toolCall" && c.name) {
 						try {
 							// SV-17: rebuild the bounded tools buffer from the
@@ -1808,6 +2057,8 @@ export default function (pi: ExtensionAPI) {
 					}
 				}
 			}
+			if (msg.role === "user" || msg.role === "assistant")
+				turns.push({ isUser: msg.role === "user", thoughts: msgThoughts });
 			// Reconstruct the last edit diff from persisted tool-result details.
 			if (msg.role === "toolResult" && msg.toolName === "edit") {
 				const d = msg.details;
@@ -1820,11 +2071,19 @@ export default function (pi: ExtensionAPI) {
 			// to their calls by toolCallId.
 			if (msg.role === "toolResult" && typeof msg.toolCallId === "string") {
 				try {
-					ingestToolResult(msg.toolCallId, msg.content, msg.isError);
+					// Pass the whole message (content + details), the same
+					// shape as a live result.
+					ingestToolResult(msg.toolCallId, msg, msg.isError);
 				} catch {
 					/* skip */
 				}
 			}
+		}
+		const thoughts: string[] = [];
+		if (thinkingScope === "turn") {
+			for (const t of thoughtsSinceLastUser(turns)) thoughts.push(t);
+		} else {
+			for (const turn of turns) for (const t of turn.thoughts) thoughts.push(t);
 		}
 		if (thoughts.length) {
 			for (const t of thoughts) {
@@ -1853,6 +2112,7 @@ export default function (pi: ExtensionAPI) {
 			};
 		}
 		thinkingOn = cfg.thinking;
+		thinkingScope = cfg.thinkingScope;
 		toolsOn = cfg.tools;
 		toolMode = cfg.toolMode;
 		bandHeight = cfg.bandHeight;
@@ -1918,6 +2178,14 @@ export default function (pi: ExtensionAPI) {
 	// so tool-only / thinking-only rounds add nothing to the doc.
 	pi.on("message_start", (event) => {
 		const msg = (event as any).message;
+		// SV-27: a new user message starts a new turn — with thinkingScope
+		// "turn" the panel drops the previous turn's reasoning here (it stays in
+		// the transcript, and reconstruct() restores it on resume/branch switch).
+		// Clearing on thinking_start instead would wipe the earlier blocks of the
+		// SAME turn, since one assistant message can stream several of them.
+		if (msg?.role === "user" && thinkingScope === "turn") {
+			thinking.reset();
+		}
 		if (msg?.role === "user") addResponseMessage(msg);
 		if (anyPanelActive()) requestRender();
 	});
@@ -2230,6 +2498,27 @@ export default function (pi: ExtensionAPI) {
 		},
 	});
 
+	pi.registerCommand("split-thinking-scope", {
+		description:
+			"Thinking panel buffer: turn (current turn only) | session (all turns)",
+		handler: async (args, ctx) => {
+			if (ctx.mode !== "tui") return;
+			const arg = String(args ?? "").trim().toLowerCase();
+			if (arg === "turn") thinkingScope = "turn";
+			else if (arg === "session") thinkingScope = "session";
+			else thinkingScope = thinkingScope === "turn" ? "session" : "turn";
+			// Switching back to "turn" takes effect now instead of at the next
+			// user message, so the command's feedback matches the panel. The live
+			// stream indicator survives: `current` is rebuilt by the next delta.
+			if (thinkingScope === "turn") thinking.reset(true);
+			if (anyPanelActive()) requestRender();
+			ctx.ui.notify(
+				`Thinking panel: ${thinkingScope === "turn" ? "current turn only" : "all turns"}`,
+				"info",
+			);
+		},
+	});
+
 	pi.registerCommand("split-tools", {
 		description: "Toggle the tools panel within the band",
 		handler: async (_args, ctx) => {
@@ -2384,6 +2673,7 @@ export default function (pi: ExtensionAPI) {
 				files: filesEffective,
 				toolMode,
 				trimResponse,
+				thinkingScope,
 				bandHeight,
 				toolsWidthPct,
 				...(filesWidth === null ? {} : { filesWidth }),
