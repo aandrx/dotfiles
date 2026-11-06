@@ -9,6 +9,7 @@ const SHARED = `Non-negotiable in every mode:
 - Do not edit generated files or generated changelogs by hand.
 - Stop and report the exact blocker when the required surface or evidence is unavailable.
 - Name the active mode in the first line of any summary or status report. Never attribute earlier work to the current mode; say which mode each claim was verified under.
+- Background jobs report once, when the last one settles, as a single batch. Treat that batch notice as the moment to summarise: what ran, what passed, what failed, and the next step. Do not open that summary with the mode line, do not acknowledge jobs one at a time, and never promise a follow-up report on a job started without notify=always, because a successful job alone sends nothing.
 `;
 
 const SHIPP = `# Mode: shipp
