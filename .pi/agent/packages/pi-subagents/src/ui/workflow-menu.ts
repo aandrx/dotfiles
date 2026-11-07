@@ -18,7 +18,6 @@ import type { ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
 import { stripTerminalSequences, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 import type { AgentRecord } from "../types.js";
 import { pauseWorkflowTask, resumeWorkflowTask, type WorkflowTask } from "../workflow/task.js";
-import { framedSelect } from "./framed-select.js";
 import { WorkflowDialog } from "./workflow-dialog.js";
 
 /** Everything the menu and the inspector need from the extension around them. */
@@ -195,19 +194,11 @@ export async function showWorkflowsMenu(
   const clip = (value: string, w: number) => stripTerminalSequences(truncateToWidth(value, w));
   const padEnd = (text: string, w: number) => text + " ".repeat(Math.max(0, w - visibleWidth(text)));
   const padStart = (text: string, w: number) => " ".repeat(Math.max(0, w - visibleWidth(text))) + text;
-  const picked = await framedSelect(ctx, "Workflows", ids, (id, width) => {
-    const task = deps.tasks.get(id)!;
-    const name = task.meta?.name ?? id;
-    const status = task.status;
-    const agents = `${task.agentCount} agent${task.agentCount === 1 ? "" : "s"}`;
-    const separators = 3 * 3; // " | " between the four columns
-    const statusWidth = Math.max(5, Math.min(10, Math.floor((width - idWidth - separators) / 3)));
-    const agentsWidth = statusWidth;
-    const nameWidth = Math.max(1, width - idWidth - separators - statusWidth - agentsWidth);
-    return `${padEnd(clip(name, nameWidth), nameWidth)} | ${padEnd(clip(status, statusWidth), statusWidth)} | ${padStart(clip(agents, agentsWidth), agentsWidth)} | ${clip(id, idWidth)}`;
+  const labels = tasks.map(task => {
+    const name = task.meta?.name ?? task.id;
+    return `${name} | ${task.status} | ${task.agentCount} agent${task.agentCount === 1 ? "" : "s"} | ${task.id}`;
   });
-  if (picked !== undefined) {
-    const task = deps.tasks.get(picked);
-    if (task !== undefined) await showWorkflowDialog(ctx, task, deps);
-  }
+  const picked = await ctx.ui.select("Workflows", labels);
+  const pickedIndex = picked !== undefined ? labels.indexOf(picked) : -1;
+  if (pickedIndex >= 0) await showWorkflowDialog(ctx, tasks[pickedIndex], deps);
 }

@@ -62,7 +62,6 @@ import {
   type WorkflowEntry,
 } from "../workflow/progress.js";
 import { SPINNER, type Theme } from "./agent-widget.js";
-import { fullFrame } from "./full-frame.js";
 import {
   ASCII_GLYPHS,
   clampLine,
@@ -1185,11 +1184,7 @@ export class WorkflowDialog implements Component {
       spinnerFrame: this.spinnerFrame,
       terminalRows: this.tui.terminal?.rows ?? 24,
     });
-    return fullFrame(
-      styleWorkflowCardLines(lines, this.theme),
-      width,
-      text => this.theme.fg("accent", text),
-    );
+    return styleWorkflowCardLines(lines, this.theme);
   }
 
   invalidate(): void {
