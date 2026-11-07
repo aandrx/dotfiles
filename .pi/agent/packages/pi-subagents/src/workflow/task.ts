@@ -320,6 +320,12 @@ export function formatWorkflowNotification(task: WorkflowTask, now = Date.now())
     : task.status === "killed" ? "Stopped"
     : `Error: ${task.error ?? "unknown"}`;
   const result = workflowResultText(task);
+  // A failed agent leaves a null in the script's result, so the notification is
+  // the only place its reason can reach the model. Without this the run reads as
+  // "0/2 agents" with no explanation of why none of them resolved.
+  const failures = collapse(task.workflowProgress).agents
+    .filter(agent => agent.state === "error")
+    .map(agent => `- ${escapeXml(agent.label)}: ${escapeXml(agent.error ?? "Agent failed.")}`);
   return [
     `<task-notification>`,
     `<task-id>${task.id}</task-id>`,
@@ -327,8 +333,11 @@ export function formatWorkflowNotification(task: WorkflowTask, now = Date.now())
     task.scriptPath ? `<script>${escapeXml(task.scriptPath)}</script>` : null,
     `<status>${escapeXml(status)}</status>`,
     `<summary>Workflow "${escapeXml(task.workflowName ?? task.id)}" ${task.status} — ${totals.done}/${totals.total} agents${
+      failures.length > 0 ? `, ${failures.length} failed` : ""
+    }${
       task.replayedCount > 0 ? `, ${task.replayedCount} replayed from ${escapeXml(task.resumedFrom ?? "an earlier run")}` : ""
     }</summary>`,
+    failures.length > 0 ? `<failures>\n${failures.join("\n")}\n</failures>` : null,
     `<result>${escapeXml(result.length > 4000 ? `${result.slice(0, 4000)}\n...(truncated)` : result)}</result>`,
     `<usage><total_tokens>${task.totalTokens}</total_tokens><tool_uses>${task.totalToolCalls}</tool_uses><duration_ms>${elapsedMs(task, now)}</duration_ms></usage>`,
     `</task-notification>`,
