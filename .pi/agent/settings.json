@@ -73,9 +73,14 @@
       }
     }
   },
-  "lastChangelogVersion": "1.5.0",
+  "lastChangelogVersion": "1.5.2",
   "extensionChangelogVersions": {
     "{\"source\":\"npm:pi-ollama-cloud\",\"scope\":\"user\"}": "0.13.1",
-    "{\"source\":\"./packages/pi-split-view\",\"scope\":\"user\"}": "1.2.1"
+    "{\"source\":\"./packages/pi-split-view\",\"scope\":\"user\"}": "1.4.0",
+    "{\"source\":\"./packages/pi-subagents\",\"scope\":\"user\"}": "0.23.1"
+  },
+  "retry": {
+    "maxRetries": 5,
+    "baseDelayMs": 2000
   }
 }
