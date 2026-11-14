@@ -1,0 +1,31 @@
+/* ==========================================================================
+   Claude Pro usage indicator  (module: custom/claude-quota)
+   --------------------------------------------------------------------------
+   Self-contained add-on. To uninstall completely:
+     1. delete this file, claude-quota.py, claude-quota-click.sh
+     2. remove the @import "claude-quota.css" line in the profile styles
+     3. remove "custom/claude-quota" from modules-right in the profile configs
+     4. remove the "custom/claude-quota" block in the profile configs
+   ========================================================================== */
+
+@define-color claude_warn #f2b8a2;
+@define-color claude_crit #ffb4ab;
+
+#custom-claude-quota {
+  padding: 0 1px;
+  margin: 0 3px;
+}
+
+#custom-claude-quota.ok          { color: @primary; }
+#custom-claude-quota.warn        { color: @claude_warn; }
+#custom-claude-quota.crit,
+#custom-claude-quota.max         { color: @claude_crit; }
+#custom-claude-quota.stale,
+#custom-claude-quota.unavailable { color: @outline; }
+
+#custom-claude-quota:hover {
+  background: transparent;
+  background-image: none;
+  border-color: transparent;
+  box-shadow: none;
+}

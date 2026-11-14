@@ -9,7 +9,7 @@
 
   "modules-left": ["niri/workspaces"],
   "modules-center": ["clock"],
-  "modules-right": ["custom/codex-quota", "custom/quota-sep", "custom/mistral-quota", "custom/quota-sep", "custom/opencode-go", "custom/quota-sep", "custom/deepseek-peak", "custom/quota-sep", "memory", "pulseaudio", "network", "battery", "custom/swaync"],
+  "modules-right": ["custom/claude-quota", "custom/quota-sep", "custom/codex-quota", "custom/quota-sep", "custom/mistral-quota", "custom/quota-sep", "custom/opencode-go", "custom/quota-sep", "custom/deepseek-peak", "custom/quota-sep", "memory", "pulseaudio", "network", "battery", "custom/swaync"],
 
   // Custom Niri workspaces module
   "niri/workspaces": {
@@ -132,6 +132,22 @@
     "format": "|",
     "interval": "once",
     "tooltip": false
+  },
+
+  // ─── Claude Pro usage (add-on) ─────────────────────────────────────
+  // To uninstall: remove this block, the "custom/claude-quota" entries in
+  // modules-right, claude-quota.css + its @import, claude-quota.py, and
+  // claude-quota-click.sh.
+  "custom/claude-quota": {
+    "exec": "\"$HOME/.config/waybar-niri/claude-quota.py\"",
+    "interval": 30,
+    "return-type": "json",
+    "format": "{text}",
+    "on-click": "\"$HOME/.config/waybar-niri/claude-quota-click.sh\"",
+    "on-click-right": "rm -f \"$HOME/.cache/waybar-claude-quota.data\" && pkill -RTMIN+11 waybar",
+    "on-click-middle": "xdg-open https://claude.ai/settings/usage",
+    "signal": 11,
+    "tooltip": true
   },
 
   "custom/codex-quota": {
