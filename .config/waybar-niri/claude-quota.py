@@ -35,11 +35,13 @@ from pathlib import Path
 USAGE_URL = "https://api.anthropic.com/api/oauth/usage"
 AUTH_PATH = Path.home() / ".pi" / "agent" / "auth.json"
 USER_AGENT = "claude-cli/2.1.92 (external, cli)"
-CACHE_TTL = 55
-STALE_TTL = 900
+CACHE_TTL = 270
+STALE_TTL = 3600
+BACKOFF_TTL = 300
 HTTP_TIMEOUT = 5
 CACHE_NAME = "waybar-claude-quota.data"
 VIEW_NAME = "waybar-claude-quota.view"
+RETRY_NAME = "waybar-claude-quota.retry"
 
 
 def debug(msg: str) -> None:
@@ -248,6 +250,25 @@ def save_cache(data: dict, now: float) -> None:
     write_atomic(cache_dir() / CACHE_NAME, json.dumps(payload, separators=(",", ":")))
 
 
+def read_epoch(name: str) -> float | None:
+    text = read_text(cache_dir() / name)
+    try:
+        return float(text)
+    except ValueError:
+        return None
+
+
+def write_epoch(name: str, value: float) -> None:
+    write_atomic(cache_dir() / name, str(value))
+
+
+def clear_epoch(name: str) -> None:
+    try:
+        (cache_dir() / name).unlink()
+    except OSError:
+        pass
+
+
 def view() -> str:
     return read_text(cache_dir() / VIEW_NAME) or "compact"
 
@@ -414,6 +435,19 @@ def main() -> int:
         print(json.dumps(render(cache, now), ensure_ascii=False))
         return 0
 
+    retry_at = read_epoch(RETRY_NAME)
+    if retry_at is not None and now - retry_at < BACKOFF_TTL:
+        if cache is not None:
+            print(json.dumps(
+                render(cache, now, stale=True, error="Rate limited; backing off before retrying"),
+                ensure_ascii=False,
+            ))
+        else:
+            print(json.dumps(unavailable(
+                "Anthropic usage endpoint is rate limited; backing off before retrying."
+            )))
+        return 0
+
     try:
         data = fetch_usage(token)
     except urllib.error.HTTPError as exc:
@@ -423,7 +457,11 @@ def main() -> int:
                 auth=True,
             )))
             return 0
-        message = f"HTTP {exc.code} from Anthropic usage endpoint"
+        if exc.code == 429:
+            write_epoch(RETRY_NAME, now)
+            message = "HTTP 429: Anthropic usage endpoint rate limited; backing off"
+        else:
+            message = f"HTTP {exc.code} from Anthropic usage endpoint"
         if cache is not None and now - cache["at"] <= STALE_TTL:
             print(json.dumps(render(cache, now, stale=True, error=message), ensure_ascii=False))
             return 0
@@ -438,6 +476,7 @@ def main() -> int:
         print(json.dumps(unavailable(message)))
         return 0
 
+    clear_epoch(RETRY_NAME)
     save_cache(data, now)
     print(json.dumps(render(data, now), ensure_ascii=False))
     return 0
