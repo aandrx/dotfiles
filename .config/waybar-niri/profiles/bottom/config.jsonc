@@ -69,7 +69,7 @@
     "tooltip-format": "<b>{desc}</b>\nOutput  {volume}%\nInput  {source_volume}%",
     "scroll-step": 5,
     "format": "{icon} {volume}%",
-    "format-muted": "󰖁 muted",
+    "format-muted": "󰖁",
     "format-icons": {
       "default": ["󰕿", "󰖀", "󰕾"],
       "headphones": "󰋋",
@@ -144,7 +144,7 @@
     "return-type": "json",
     "format": "{text}",
     "on-click": "\"$HOME/.config/waybar-niri/claude-quota-click.sh\"",
-    "on-click-right": "rm -f \"$HOME/.cache/waybar-claude-quota.data\" && pkill -RTMIN+11 waybar",
+    "on-click-right": "rm -f \"$HOME/.cache/waybar-claude-quota.data\" \"$HOME/.cache/waybar-claude-quota.retry\" && pkill -RTMIN+11 waybar",
     "on-click-middle": "xdg-open https://claude.ai/settings/usage",
     "signal": 11,
     "tooltip": true
