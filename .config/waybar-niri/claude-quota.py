@@ -11,8 +11,10 @@ The response's `limits` array provides:
     weekly_scoped  model-scoped weekly window (Fable)
 
 The widget shows used percentages, matching the Claude usage page. It reads
-the read-only access token from ~/.pi/agent/auth.json and never writes
-credentials. Set ANTHROPIC_OAUTH_TOKEN to override for testing.
+the access token from ~/.pi/agent/auth.json. When the token is expired it
+invokes pi's own auth refresh (`pi auth print-bearer-token`), discards the
+printed token, and re-reads the refreshed credential from auth.json. Set
+ANTHROPIC_OAUTH_TOKEN to override for testing.
 
 Self-contained add-on. To uninstall:
   1. delete this file, claude-quota-click.sh, claude-quota.css
@@ -25,6 +27,9 @@ from __future__ import annotations
 import html
 import json
 import os
+import shutil
+import signal
+import subprocess
 import sys
 import time
 import urllib.error
@@ -39,9 +44,12 @@ CACHE_TTL = 270
 STALE_TTL = 3600
 BACKOFF_TTL = 300
 HTTP_TIMEOUT = 5
+AUTH_REFRESH_TIMEOUT = 20
+AUTH_RETRY_TTL = 300
 CACHE_NAME = "waybar-claude-quota.data"
 VIEW_NAME = "waybar-claude-quota.view"
 RETRY_NAME = "waybar-claude-quota.retry"
+AUTH_RETRY_NAME = "waybar-claude-quota.auth-retry"
 
 
 def debug(msg: str) -> None:
@@ -269,6 +277,55 @@ def clear_epoch(name: str) -> None:
         pass
 
 
+def refresh_auth() -> bool:
+    binary = os.environ.get("PI_BIN") or shutil.which("pi")
+    if not binary:
+        for fallback in (Path.home() / "bin" / "pi", Path.home() / ".local" / "bin" / "pi"):
+            if fallback.exists():
+                binary = str(fallback)
+                break
+    if not binary:
+        debug("pi binary not found for auth refresh")
+        return False
+    try:
+        proc = subprocess.Popen(
+            [
+                binary,
+                "auth",
+                "print-bearer-token",
+                "--provider",
+                "anthropic",
+                "--min-expiry",
+                "1h",
+            ],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+        try:
+            proc.wait(timeout=AUTH_REFRESH_TIMEOUT)
+        except subprocess.TimeoutExpired:
+            try:
+                os.killpg(proc.pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+            try:
+                proc.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                try:
+                    os.killpg(proc.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                proc.wait()
+            debug("auth refresh timed out")
+            return False
+        return proc.returncode == 0
+    except Exception as exc:
+        debug(f"auth refresh failed: {exc}")
+        return False
+
+
 def view() -> str:
     return read_text(cache_dir() / VIEW_NAME) or "compact"
 
@@ -426,11 +483,24 @@ def main() -> int:
     token = load_token(now)
     cache = load_cache(now)
     if not token:
-        print(json.dumps(unavailable(
-            "Anthropic OAuth token is missing or expired. Reconnect Anthropic in pi.",
-            auth=True,
-        )))
-        return 0
+        retry_at = read_epoch(AUTH_RETRY_NAME)
+        if retry_at is None or now - retry_at >= AUTH_RETRY_TTL:
+            debug("refreshing Anthropic auth")
+            refresh_auth()
+            token = load_token(now)
+            if token:
+                clear_epoch(AUTH_RETRY_NAME)
+            else:
+                write_epoch(AUTH_RETRY_NAME, now)
+        if not token:
+            print(json.dumps(unavailable(
+                "Anthropic token expired; automatic refresh failed. Run pi auth login anthropic.",
+                auth=True,
+            )))
+            return 0
+    else:
+        clear_epoch(AUTH_RETRY_NAME)
+
     if cache is not None and now - cache["at"] < CACHE_TTL:
         print(json.dumps(render(cache, now), ensure_ascii=False))
         return 0
