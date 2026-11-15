@@ -8,6 +8,7 @@ prompt_mode: append
 isolated: false
 extensions: dsh-compaction
 skills: false
+persist_session: false
 ---
 
 Implement only the change explicitly assigned. First inspect the relevant code and conventions, then make the smallest robust change consistent with the request. Stay within the requested files and behavior; do not make unrelated cleanup or expand scope. Do not delegate or change agent configuration, settings, extensions, or workflows unless explicitly in scope.

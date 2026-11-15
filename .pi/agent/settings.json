@@ -15,7 +15,12 @@
     "mistral/deepseek-v4-1-flash-1017",
     "mistral-api/zai-glm-5-3",
     "mistral-api/zai-glm-5-3-flash",
-    "mistral-api/deepseek-v4-1-flash-1017"
+    "mistral-api/deepseek-v4-1-flash-1017",
+    "claude-bridge/claude-opus-5-5",
+    "claude-bridge/claude-fable-5-1",
+    "claude-bridge/claude-fable-5-2",
+    "claude-bridge/claude-haiku-5-5",
+    "claude-bridge/claude-sonnet-5-5"
   ],
   "packages": [
     {
@@ -32,11 +37,15 @@
     "./packages/pi-context-bar",
     "npm:pi-polish",
     "npm:pi-next-prompt",
-    "git:github.com/5omeOtherGuy/pi-mistral-subscription@v0.2.0"
+    "git:github.com/5omeOtherGuy/pi-mistral-subscription@v0.2.0",
+    "npm:pi-claude-bridge"
   ],
   "defaultProvider": "opencode-go",
   "hideThinkingBlock": true,
   "defaultThinkingLevel": "low",
+  "cacheWarming": "off",
+  "enableInstallTelemetry": false,
+  "enableAnalytics": false,
   "modelThinkingLevels": {
     "nvidia/z-ai/glm-5.3-flash": "high",
     "mistral/zai-glm-5-3": "high",
@@ -70,6 +79,21 @@
       },
       "openai-codex/gpt-6.1-sol": {
         "reserveTokens": 131072
+      },
+      "claude-bridge/claude-opus-5-5": {
+        "reserveTokens": 64000
+      },
+      "claude-bridge/claude-fable-5-1": {
+        "reserveTokens": 64000
+      },
+      "claude-bridge/claude-fable-5-2": {
+        "reserveTokens": 64000
+      },
+      "claude-bridge/claude-haiku-5-5": {
+        "reserveTokens": 64000
+      },
+      "claude-bridge/claude-sonnet-5-5": {
+        "reserveTokens": 64000
       }
     }
   },
