@@ -1,26 +1,18 @@
 #!/usr/bin/env python3
-"""Waybar module: Mistral subscription allowances.
+"""Waybar module: Mistral Education allowances.
 
-Mistral exposes no usage API below Enterprise, so this reads the same admin
-subscription page the pi api-usage extension uses:
+Reads Mistral's billing endpoint with the Mistral API key stored by pi:
 
-    https://admin.mistral.ai/subscription
+    GET https://api.mistral.ai/v1/billing/budget
 
-Authentication is the browser session stored in Firefox cookies
-(ory_session* and csrf_token* for .mistral.ai). Set MISTRAL_COOKIE to a full
-Cookie header when Firefox is not the browser.
-
-The page contains two allowances:
-    Included API usage        $used $total
-    Included Vibe Code usage  $used $total
-
-Both reset on the first day of each calendar month. The widget shows Vibe in
-compact mode and both budgets in the expanded view and tooltip.
+The response contains `vibe_budget` and `api_budget` with a usage percentage,
+initial budget, currency and reset timestamp. This avoids the browser session
+entirely; the admin subscription page is no longer used.
 
 Self-contained add-on. To uninstall:
   1. delete this file, mistral-quota-click.sh, mistral-quota.css
   2. remove the "custom/mistral-quota" block and modules-right entries
-  3. remove the @import "mistral-quota.css" line in style.css
+  3. remove the @import "mistral-quota.css" line in the profile styles
 """
 
 from __future__ import annotations
@@ -28,29 +20,23 @@ from __future__ import annotations
 import html
 import json
 import os
-import re
-import sqlite3
 import sys
 import time
 import urllib.error
 import urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
 
-ADMIN_URL = "https://admin.mistral.ai/subscription"
-USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130 Safari/537.36"
+BILLING_URL = "https://api.mistral.ai/v1/billing/budget"
+AUTH_PATH = Path.home() / ".pi" / "agent" / "auth.json"
+USER_AGENT = "mistral-waybar/1.0"
 CACHE_TTL = 270
-STALE_TTL = 900
+STALE_TTL = 3600
+BACKOFF_TTL = 300
 HTTP_TIMEOUT = 8
 CACHE_NAME = "waybar-mistral-quota.data"
 VIEW_NAME = "waybar-mistral-quota.view"
-
-
-class SessionError(Exception):
-    """The browser session is missing or expired."""
-
-
-class FetchError(Exception):
-    """The page could not be fetched or parsed."""
+RETRY_NAME = "waybar-mistral-quota.retry"
 
 
 def debug(msg: str) -> None:
@@ -98,122 +84,95 @@ def write_atomic(path: Path, text: str) -> None:
         debug(f"cache write failed: {exc}")
 
 
-def firefox_profile() -> Path | None:
-    root = Path.home() / ".mozilla" / "firefox"
-    profiles: list[str] = []
+def parse_time(value) -> float | None:
+    if not isinstance(value, str) or not value:
+        return None
     try:
-        ini = (root / "profiles.ini").read_text(encoding="utf-8")
-        profiles.extend(m.group(1).strip() for m in re.finditer(r"^Path=(.+)$", ini, re.M))
-    except OSError:
-        pass
-    try:
-        profiles.extend(entry.name for entry in root.iterdir())
-    except OSError:
-        pass
-    for profile in profiles:
-        candidate = root / profile
-        if (candidate / "cookies.sqlite").exists():
-            return candidate
+        dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.timestamp()
+
+
+def load_key() -> str | None:
+    override = os.environ.get("MISTRAL_API_KEY")
+    if override and override.strip():
+        return override.strip()
+    data = read_json(AUTH_PATH)
+    entry = data.get("mistral") if isinstance(data, dict) else None
+    if not isinstance(entry, dict):
+        return None
+    for field in ("key", "access"):
+        value = entry.get(field)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
     return None
 
 
-def cookie_header() -> str | None:
-    manual = os.environ.get("MISTRAL_COOKIE", "").strip()
-    if manual:
-        return manual
-
-    profile = firefox_profile()
-    if profile is None:
+def clamp_percent(value) -> float | None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
         return None
-    db = profile / "cookies.sqlite"
-    try:
-        uri = f"file:{db}?immutable=1"
-        with sqlite3.connect(uri, uri=True, timeout=2) as conn:
-            rows = conn.execute(
-                "select name || '=' || value from moz_cookies "
-                "where host = '.mistral.ai' "
-                "and (name like 'ory_session%' or name like 'csrf_token%') "
-                "order by lastAccessed desc;"
-            ).fetchall()
-    except sqlite3.Error as exc:
-        debug(f"cookie database read failed: {exc}")
+    return min(100.0, max(0.0, float(value)))
+
+
+def normalize_entry(raw) -> dict | None:
+    if not isinstance(raw, dict):
         return None
-    pairs = [row[0] for row in rows if row and isinstance(row[0], str) and "=" in row[0]]
-    return "; ".join(pairs) if pairs else None
-
-
-def parse_allowance(text: str, label: str) -> dict | None:
-    for match in re.finditer(re.escape(label), text):
-        window = text[match.start() : match.start() + 700]
-        amount = re.search(r"\$([\d,]+(?:\.\d+)?)\s*\$([\d,]+(?:\.\d+)?)", window)
-        if amount is None:
-            continue
-        used = float(amount.group(1).replace(",", ""))
-        total = float(amount.group(2).replace(",", ""))
-        if used < 0 or total <= 0:
-            continue
-        reset = re.search(r"Resets in (\d+) days?", window)
-        return {
-            "used": used,
-            "total": total,
-            "reset_days": int(reset.group(1)) if reset else None,
-        }
-    return None
-
-
-def parse_page(page: bytes) -> dict | None:
-    text = page.decode("utf-8", "replace")
-    text = re.sub(r"<[^>]+>", " ", text)
-    text = html.unescape(text)
-    text = re.sub(r"\s+", " ", text)
-
-    api = parse_allowance(text, "Included API usage")
-    vibe = parse_allowance(text, "Included Vibe Code usage")
-    if api is None and vibe is None:
+    total = raw.get("initial_budget")
+    percent = clamp_percent(raw.get("usage_percentage"))
+    if isinstance(total, bool) or not isinstance(total, (int, float)) or total <= 0:
         return None
-    return {"api": api, "vibe": vibe}
+    if percent is None:
+        return None
+    return {
+        "percent": percent,
+        "total": float(total),
+        "used": float(total) * percent / 100.0,
+        "reset": parse_time(raw.get("reset_at")),
+    }
 
 
-def fetch_allowances() -> dict:
-    cookie = cookie_header()
-    if not cookie:
-        raise SessionError(
-            "No Mistral admin session found. Sign in at admin.mistral.ai "
-            "in Firefox or set MISTRAL_COOKIE."
-        )
+def normalize(payload) -> dict | None:
+    if not isinstance(payload, dict):
+        return None
+    vibe = normalize_entry(payload.get("vibe_budget"))
+    api = normalize_entry(payload.get("api_budget"))
+    api_raw = payload.get("api_budget")
+    api_unprovisioned = (
+        isinstance(api_raw, dict)
+        and isinstance(api_raw.get("initial_budget"), (int, float))
+        and not isinstance(api_raw.get("initial_budget"), bool)
+        and api_raw.get("initial_budget") <= 0
+    )
+    if vibe is None and api is None:
+        return None
+    result = {}
+    if vibe is not None:
+        result["vibe"] = vibe
+    if api is not None:
+        result["api"] = api
+    if api_unprovisioned:
+        result["api_unprovisioned"] = True
+    return result
 
+
+def fetch_budget(key: str) -> dict:
     request = urllib.request.Request(
-        ADMIN_URL,
+        BILLING_URL,
         headers={
-            "Cookie": cookie,
+            "Authorization": f"Bearer {key}",
             "User-Agent": USER_AGENT,
-            "Accept": "text/html",
+            "Accept": "application/json",
         },
     )
-    try:
-        with urllib.request.urlopen(request, timeout=HTTP_TIMEOUT) as response:
-            if not response.url.startswith("https://admin.mistral.ai/"):
-                raise SessionError("Mistral admin session expired. Sign in again.")
-            raw = response.read(600_000)
-    except urllib.error.HTTPError as exc:
-        if exc.code in (401, 403):
-            raise SessionError(
-                f"HTTP {exc.code}: Mistral admin session expired. "
-                "Sign in again at admin.mistral.ai."
-            ) from exc
-        raise FetchError(f"HTTP {exc.code} while fetching the subscription page.") from exc
-    except SessionError:
-        raise
-    except Exception as exc:
-        raise FetchError(f"fetch failed: {exc}") from exc
-
-    parsed = parse_page(raw)
-    if parsed is None:
-        raise SessionError(
-            "Mistral subscription page did not contain the expected allowances. "
-            "Sign in again at admin.mistral.ai."
-        )
-    return parsed
+    with urllib.request.urlopen(request, timeout=HTTP_TIMEOUT) as response:
+        payload = json.loads(response.read(65536))
+    data = normalize(payload)
+    if data is None:
+        raise ValueError("billing response did not match the expected shape")
+    return data
 
 
 def load_cache(now: float) -> dict | None:
@@ -225,63 +184,64 @@ def load_cache(now: float) -> dict | None:
         return None
     if now - at > STALE_TTL:
         return None
-
-    result: dict = {"at": float(at)}
-    for name in ("api", "vibe"):
+    for name in ("vibe", "api"):
         entry = data.get(name)
         if entry is None:
             continue
         if not isinstance(entry, dict):
             return None
-        used = entry.get("used")
-        total = entry.get("total")
-        reset = entry.get("reset_days")
-        if (
-            isinstance(used, bool)
-            or not isinstance(used, (int, float))
-            or used < 0
-            or isinstance(total, bool)
-            or not isinstance(total, (int, float))
-            or total <= 0
-        ):
+        for field in ("percent", "total", "used"):
+            value = entry.get(field)
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                return None
+        reset = entry.get("reset")
+        if reset is not None and (isinstance(reset, bool) or not isinstance(reset, (int, float))):
             return None
-        if reset is not None and (
-            isinstance(reset, bool) or not isinstance(reset, int) or reset < 0
-        ):
-            return None
-        result[name] = {
-            "used": float(used),
-            "total": float(total),
-            "reset_days": reset,
-        }
-    if "api" not in result and "vibe" not in result:
+    if not data.get("vibe") and not data.get("api"):
         return None
-    return result
+    return data
 
 
 def save_cache(data: dict, now: float) -> None:
     payload = {"at": now}
-    for name in ("api", "vibe"):
-        if data.get(name) is not None:
-            payload[name] = data[name]
+    payload.update(data)
     write_atomic(cache_dir() / CACHE_NAME, json.dumps(payload, separators=(",", ":")))
+
+
+def read_epoch(name: str) -> float | None:
+    text = read_text(cache_dir() / name)
+    try:
+        return float(text)
+    except ValueError:
+        return None
+
+
+def write_epoch(name: str, value: float) -> None:
+    write_atomic(cache_dir() / name, str(value))
+
+
+def clear_epoch(name: str) -> None:
+    try:
+        (cache_dir() / name).unlink()
+    except OSError:
+        pass
 
 
 def view() -> str:
     return read_text(cache_dir() / VIEW_NAME) or "compact"
 
 
-def percent(entry: dict) -> float:
-    return min(100.0, max(0.0, entry["used"] / entry["total"] * 100))
-
-
-def display_pct(entry: dict) -> str:
-    if entry["used"] >= entry["total"]:
+def percent_text(entry: dict) -> str:
+    if entry["percent"] >= 100:
         return "MAX"
-    value = percent(entry)
-    if value >= 10:
-        return f"{value:.0f}%"
-    return f"{value:.1f}%"
+    return f"{round(entry['percent']):g}%"
+
+
+def bar(percent: float) -> str:
+    filled = int(round(max(0.0, min(100.0, percent)) / 10))
+    if percent > 0 and filled == 0:
+        filled = 1
+    return "█" * filled + "░" * (10 - filled)
 
 
 def money(value: float) -> str:
@@ -290,18 +250,34 @@ def money(value: float) -> str:
     return f"${value:,.2f}"
 
 
-def bar(value: float) -> str:
-    filled = int(round(max(0.0, min(100.0, value)) / 10))
-    if value > 0 and filled == 0:
-        filled = 1
-    return "█" * filled + "░" * (10 - filled)
+def fmt_duration(seconds: float) -> str:
+    seconds = max(0, int(seconds))
+    if seconds < 60:
+        return "<1m"
+    minutes = seconds // 60
+    if minutes < 60:
+        return f"{minutes}m"
+    hours, minutes = divmod(minutes, 60)
+    if hours < 24:
+        return f"{hours}h {minutes:02d}m"
+    days, hours = divmod(hours, 24)
+    return f"{days}d {hours:02d}h"
+
+
+def reset_text(entry: dict, now: float) -> str:
+    reset = entry.get("reset")
+    if reset is None:
+        return ""
+    if reset <= now:
+        return "resetting now"
+    return f"resets in {fmt_duration(reset - now)}"
 
 
 def state_class(data: dict) -> str:
-    entries = [entry for entry in (data.get("vibe"), data.get("api")) if entry]
-    if any(entry["used"] >= entry["total"] for entry in entries):
+    entries = [e for e in (data.get("vibe"), data.get("api")) if e]
+    if any(e["percent"] >= 100 for e in entries):
         return "max"
-    worst = max(percent(entry) for entry in entries)
+    worst = max(e["percent"] for e in entries)
     if worst >= 90:
         return "crit"
     if worst >= 75:
@@ -315,63 +291,59 @@ def render(
     *,
     stale: bool = False,
     error: str | None = None,
-    last_success: float | None = None,
 ) -> dict:
     vibe = data.get("vibe")
     api = data.get("api")
-    primary = vibe or api
-    primary_label = "V" if vibe else "A"
+    primary_key = "vibe" if vibe else "api"
+    primary = data[primary_key]
 
     if view() == "expanded":
         parts = []
         if vibe:
-            parts.append(f"V {display_pct(vibe)}")
+            parts.append(f"V {percent_text(vibe)}")
         if api:
-            parts.append(f"A {display_pct(api)}")
+            parts.append(f"A {percent_text(api)}")
         text = "MIS " + "  ".join(parts)
     else:
-        text = f"MIS {primary_label} {display_pct(primary)}"
+        text = f"MIS {'V' if vibe else 'A'} {percent_text(primary)}"
     if stale:
         text = text.replace("MIS ", "MIS ~ ", 1)
 
-    if primary["used"] >= primary["total"]:
+    if primary["percent"] >= 100:
         state = "rate limited"
     else:
-        state = f"{display_pct(primary)} {'Vibe' if vibe else 'API'} used"
+        state = f"{percent_text(primary)} {'Vibe' if vibe else 'API'} used"
 
     lines = [f"<b>Mistral Education</b> - {state}"]
     for label, entry in (("Vibe", vibe), ("API", api)):
         if not entry:
             continue
         amount = f"{money(entry['used'])} / {money(entry['total'])}"
-        pct_text = "MAX" if entry["used"] >= entry["total"] else f"{display_pct(entry)} used"
-        reset = (
-            f"resets in {entry['reset_days']}d"
-            if entry.get("reset_days") is not None
-            else ""
-        )
+        used = "MAX" if entry["percent"] >= 100 else f"{percent_text(entry)} used"
         lines.append(
-            "<tt>{label:<4} {bar}  {amount:<14} {pct:<10} {reset}</tt>".format(
+            "<tt>{label:<5} {bar}  {used:<9}  {amount:<15} {reset}</tt>".format(
                 label=label,
-                bar=bar(percent(entry)),
+                bar=bar(entry["percent"]),
+                used=used,
                 amount=amount,
-                pct=pct_text,
-                reset=reset,
+                reset=reset_text(entry, now),
             )
         )
+    if data.get("api_unprovisioned"):
+        lines.append("<tt>API budget not provisioned on this account</tt>")
 
     lines.append("")
-    lines.append("<tt>Caps: Vibe $150, API $15 per calendar month</tt>")
-
-    if stale and last_success is not None:
-        minutes = max(0, int((now - last_success) // 60))
-        age = f"{minutes}m" if minutes < 60 else f"{minutes // 60}h {minutes % 60}m"
-        updated = time.strftime("%H:%M:%S", time.localtime(last_success))
-        lines.append(f"<tt>Last good {updated} ({age} ago) - refresh failed</tt>")
+    caps = ["Vibe $150"] if vibe else []
+    if api:
+        caps.append(f"API ${api['total']:g}")
+    if caps:
+        lines.append("<tt>Caps: " + ", ".join(caps) + " per calendar month</tt>")
+    if stale:
+        lines.append("<tt>Last good data shown - refresh failed</tt>")
     if error:
         lines.append(f"<tt>{html.escape(error)}</tt>")
-
     lines.append("<tt>LC expand - RC refresh - MC console</tt>")
+
     return {
         "text": text,
         "alt": text,
@@ -386,10 +358,7 @@ def unavailable(message: str, *, auth: bool = False) -> dict:
         "text": label,
         "alt": label,
         "class": "unavailable",
-        "tooltip": (
-            "<b>Mistral Education</b> - unavailable\n"
-            f"<tt>{html.escape(message)}</tt>"
-        ),
+        "tooltip": f"<b>Mistral Education</b> - unavailable\n<tt>{html.escape(message)}</tt>",
     }
 
 
@@ -402,48 +371,69 @@ def main() -> int:
     now = now_epoch()
     fixture = os.environ.get("MISTRAL_QUOTA_FIXTURE")
     if fixture:
-        try:
-            raw = Path(fixture).read_bytes()
-        except OSError as exc:
-            print(json.dumps(unavailable(f"fixture read failed: {exc}")))
+        payload = read_json(Path(fixture))
+        data = normalize(payload)
+        if data is None:
+            print(json.dumps(unavailable("fixture did not match the expected shape")))
             return 0
-        parsed = parse_page(raw)
-        if parsed is None:
-            print(json.dumps(unavailable("fixture did not contain Mistral allowances")))
-            return 0
-        print(json.dumps(render(parsed, now), ensure_ascii=False))
+        print(json.dumps(render(data, now), ensure_ascii=False))
         return 0
 
-    cached = load_cache(now)
-    if cached is not None and now - cached["at"] < CACHE_TTL:
-        print(json.dumps(render(cached, now), ensure_ascii=False))
+    key = load_key()
+    if not key:
+        print(json.dumps(unavailable(
+            "No Mistral API key found. Connect Mistral in pi or set MISTRAL_API_KEY.",
+            auth=True,
+        )))
+        return 0
+
+    cache = load_cache(now)
+    if cache is not None and now - cache["at"] < CACHE_TTL:
+        print(json.dumps(render(cache, now), ensure_ascii=False))
+        return 0
+
+    retry_at = read_epoch(RETRY_NAME)
+    if retry_at is not None and now - retry_at < BACKOFF_TTL:
+        if cache is not None:
+            print(json.dumps(
+                render(cache, now, stale=True, error="Rate limited; backing off before retrying"),
+                ensure_ascii=False,
+            ))
+        else:
+            print(json.dumps(unavailable("Mistral billing endpoint is rate limited; backing off.")))
         return 0
 
     try:
-        fetched = fetch_allowances()
-    except SessionError as exc:
-        debug(str(exc))
-        print(json.dumps(unavailable(str(exc), auth=True)))
-        return 0
-    except FetchError as exc:
-        debug(str(exc))
-        if cached is not None:
-            print(json.dumps(
-                render(
-                    cached,
-                    now,
-                    stale=True,
-                    error=str(exc),
-                    last_success=cached["at"],
-                ),
-                ensure_ascii=False,
-            ))
+        data = fetch_budget(key)
+    except urllib.error.HTTPError as exc:
+        if exc.code in (401, 403):
+            print(json.dumps(unavailable(
+                f"HTTP {exc.code}: Mistral API key rejected. Reconnect Mistral in pi.",
+                auth=True,
+            )))
             return 0
-        print(json.dumps(unavailable(str(exc))))
+        if exc.code == 429:
+            write_epoch(RETRY_NAME, now)
+            message = "HTTP 429: Mistral billing endpoint rate limited; backing off"
+        else:
+            message = f"HTTP {exc.code} from Mistral billing endpoint"
+        if cache is not None and now - cache["at"] <= STALE_TTL:
+            print(json.dumps(render(cache, now, stale=True, error=message), ensure_ascii=False))
+            return 0
+        print(json.dumps(unavailable(message)))
+        return 0
+    except Exception as exc:
+        message = f"fetch failed: {exc}"[:200]
+        debug(message)
+        if cache is not None and now - cache["at"] <= STALE_TTL:
+            print(json.dumps(render(cache, now, stale=True, error=message), ensure_ascii=False))
+            return 0
+        print(json.dumps(unavailable(message)))
         return 0
 
-    save_cache(fetched, now)
-    print(json.dumps(render(fetched, now), ensure_ascii=False))
+    clear_epoch(RETRY_NAME)
+    save_cache(data, now)
+    print(json.dumps(render(data, now), ensure_ascii=False))
     return 0
 
 
