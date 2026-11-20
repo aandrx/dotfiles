@@ -172,7 +172,7 @@
     "return-type": "json",
     "format": "{text}",
     "on-click": "\"$HOME/.config/waybar-niri/mistral-quota-click.sh\"",
-    "on-click-right": "rm -f \"$HOME/.cache/waybar-mistral-quota.data\" && pkill -RTMIN+10 waybar",
+    "on-click-right": "rm -f \"$HOME/.cache/waybar-mistral-quota.data\" \"$HOME/.cache/waybar-mistral-quota.retry\" && pkill -RTMIN+10 waybar",
     "on-click-middle": "xdg-open https://admin.mistral.ai/subscription",
     "signal": 10,
     "tooltip": true
